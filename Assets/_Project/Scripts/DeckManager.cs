@@ -1,18 +1,28 @@
 using UnityEngine;
 using System.Collections.Generic;
-using NUnit.Framework.Constraints;
-using System.Linq.Expressions;
+using UnityEngine.Rendering.Universal;
 
 public class DeckManager : MonoBehaviour
 {
+    private Camera mainCamera;
+    [SerializeField] private Camera cardCameraPrefab;
     public List<UnitData> allUnits;
     public GameObject cardPrefab;
     public Transform handParent; // 3D empty parent in world space
     public int handSize = 5;
 
     private List<UnitData> currentHand = new();
+    private List<GameObject> currentCardObjects = new();
 
     public UnitPoolManager poolManager;
+
+    private CardHandDisplayer cardHandDisplayer;
+
+    private void Awake()
+    {
+        mainCamera = Camera.main;
+        cardHandDisplayer = GetComponent<CardHandDisplayer>();
+    }
 
     void Start()
     {
@@ -30,7 +40,45 @@ public class DeckManager : MonoBehaviour
             return;
         }
 
+        InstantiateCardCameras();
+
         GenerateHand();
+    }
+
+    private void InstantiateCardCameras()
+    {
+        UniversalAdditionalCameraData urpMain = mainCamera.GetUniversalAdditionalCameraData();
+
+        // Generate Card Cameras based on the total hand size, for proper render stacks
+        for (int i = 0; i < handSize; i++)
+        {
+            Camera newCardCam = Instantiate(cardCameraPrefab);
+            newCardCam.name = $"CardCamera{i}";
+            newCardCam.transform.SetPositionAndRotation(mainCamera.transform.position, mainCamera.transform.rotation);
+            newCardCam.transform.SetParent(mainCamera.transform);
+
+            int layerDesignatedForCamera = LayerMask.NameToLayer($"Card{i}");
+            newCardCam.cullingMask = 1 << layerDesignatedForCamera;
+            newCardCam.depth = mainCamera.depth + i + 1;
+
+            urpMain.cameraStack.Add(newCardCam);
+            UniversalAdditionalCameraData urpCardCam = newCardCam.GetUniversalAdditionalCameraData();
+            urpCardCam.renderType = CameraRenderType.Overlay;
+        }
+
+        // Generate one extra card camera for 'focused' cards (hovered/dragged)
+        Camera focusCam = Instantiate(cardCameraPrefab);
+        focusCam.name = "CardCameraFocused";
+        focusCam.transform.SetPositionAndRotation(mainCamera.transform.position, mainCamera.transform.rotation);
+        focusCam.transform.SetParent(mainCamera.transform);
+
+        int focusLayer = LayerMask.NameToLayer("CardFocused");
+        focusCam.cullingMask = 1 << focusLayer;
+        focusCam.depth = mainCamera.depth + handSize + 1 + 100;
+        
+        urpMain.cameraStack.Add(focusCam);
+        UniversalAdditionalCameraData urpFocusCam = focusCam.GetUniversalAdditionalCameraData();
+        urpFocusCam.renderType = CameraRenderType.Overlay;
     }
 
     public void GenerateHand()
@@ -41,35 +89,43 @@ public class DeckManager : MonoBehaviour
         {
             var unit = allUnits[Random.Range(0, allUnits.Count)];
             currentHand.Add(unit);
-            CreateCard(unit, i);
+            GameObject card = CreateCard(unit, i);
+            currentCardObjects.Add(card);
         }
+
+        cardHandDisplayer.SetCards(currentCardObjects);
     }
 
-    void CreateCard(UnitData unit, int handSlot)
+    GameObject CreateCard(UnitData unit, int handSlot)
     {
         float cardSeparationOffset = 1.5f;
         float transformOffset = handSlot * cardSeparationOffset;
         Vector3 spawnPosition = new Vector3(transformOffset, 10f, 0f);
-        GameObject card = Instantiate(cardPrefab, spawnPosition, Quaternion.identity, handParent);
-        Debug.LogWarning($"Drew card: {unit.unitName}");
+        GameObject card = Instantiate(cardPrefab, spawnPosition, Quaternion.identity);
+        card.layer = LayerMask.NameToLayer($"Card{handSlot}");
+
+        LayerUtils.SetLayerRecursive(card, card.layer);
 
         Card3DView cardView = card.GetComponent<Card3DView>();
         if (cardView != null)
         {
             cardView.Init(unit);
         }
-        else {
+        else
+        {
             Debug.LogError("DeckManager: Spawned card prefab is missing Card3DView component.");
         }
+        return card;
     }
 
     void ClearHand()
     {
-        foreach (Transform child in handParent)
+        foreach (GameObject card in currentCardObjects)
         {
-            Destroy(child.gameObject);
+            Destroy(card.gameObject);
         }
         currentHand.Clear();
+        currentCardObjects.Clear();
     }
 
     public void Reroll()

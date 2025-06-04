@@ -119,81 +119,6 @@ NavMeshSettings:
     debug:
       m_Flags: 0
   m_NavMeshData: {fileID: 0}
---- !u!1001 &33098114
-PrefabInstance:
-  m_ObjectHideFlags: 0
-  serializedVersion: 2
-  m_Modification:
-    serializedVersion: 3
-    m_TransformParent: {fileID: 0}
-    m_Modifications:
-    - target: {fileID: 8047631475812358173, guid: 106c702bb3f249b4daf21077dd11b33b, type: 3}
-      propertyPath: m_Name
-      value: CardPrefab
-      objectReference: {fileID: 0}
-    - target: {fileID: 9064655155196449678, guid: 106c702bb3f249b4daf21077dd11b33b, type: 3}
-      propertyPath: m_LocalScale.x
-      value: 1843.7559
-      objectReference: {fileID: 0}
-    - target: {fileID: 9064655155196449678, guid: 106c702bb3f249b4daf21077dd11b33b, type: 3}
-      propertyPath: m_LocalScale.y
-      value: 1843.7559
-      objectReference: {fileID: 0}
-    - target: {fileID: 9064655155196449678, guid: 106c702bb3f249b4daf21077dd11b33b, type: 3}
-      propertyPath: m_LocalScale.z
-      value: 1843.7559
-      objectReference: {fileID: 0}
-    - target: {fileID: 9064655155196449678, guid: 106c702bb3f249b4daf21077dd11b33b, type: 3}
-      propertyPath: m_LocalPosition.x
-      value: 2.3416862
-      objectReference: {fileID: 0}
-    - target: {fileID: 9064655155196449678, guid: 106c702bb3f249b4daf21077dd11b33b, type: 3}
-      propertyPath: m_LocalPosition.y
-      value: -0.37493
-      objectReference: {fileID: 0}
-    - target: {fileID: 9064655155196449678, guid: 106c702bb3f249b4daf21077dd11b33b, type: 3}
-      propertyPath: m_LocalPosition.z
-      value: -71.16016
-      objectReference: {fileID: 0}
-    - target: {fileID: 9064655155196449678, guid: 106c702bb3f249b4daf21077dd11b33b, type: 3}
-      propertyPath: m_LocalRotation.w
-      value: 1
-      objectReference: {fileID: 0}
-    - target: {fileID: 9064655155196449678, guid: 106c702bb3f249b4daf21077dd11b33b, type: 3}
-      propertyPath: m_LocalRotation.x
-      value: 0
-      objectReference: {fileID: 0}
-    - target: {fileID: 9064655155196449678, guid: 106c702bb3f249b4daf21077dd11b33b, type: 3}
-      propertyPath: m_LocalRotation.y
-      value: 0
-      objectReference: {fileID: 0}
-    - target: {fileID: 9064655155196449678, guid: 106c702bb3f249b4daf21077dd11b33b, type: 3}
-      propertyPath: m_LocalRotation.z
-      value: 0
-      objectReference: {fileID: 0}
-    - target: {fileID: 9064655155196449678, guid: 106c702bb3f249b4daf21077dd11b33b, type: 3}
-      propertyPath: m_LocalEulerAnglesHint.x
-      value: 0
-      objectReference: {fileID: 0}
-    - target: {fileID: 9064655155196449678, guid: 106c702bb3f249b4daf21077dd11b33b, type: 3}
-      propertyPath: m_LocalEulerAnglesHint.y
-      value: 0
-      objectReference: {fileID: 0}
-    - target: {fileID: 9064655155196449678, guid: 106c702bb3f249b4daf21077dd11b33b, type: 3}
-      propertyPath: m_LocalEulerAnglesHint.z
-      value: 0
-      objectReference: {fileID: 0}
-    m_RemovedComponents: []
-    m_RemovedGameObjects: []
-    m_AddedGameObjects: []
-    m_AddedComponents:
-    - targetCorrespondingSourceObject: {fileID: 2195039541938576250, guid: 106c702bb3f249b4daf21077dd11b33b, type: 3}
-      insertIndex: -1
-      addedObject: {fileID: 0}
-    - targetCorrespondingSourceObject: {fileID: 73361144508698319, guid: 106c702bb3f249b4daf21077dd11b33b, type: 3}
-      insertIndex: -1
-      addedObject: {fileID: 0}
-  m_SourcePrefab: {fileID: 100100000, guid: 106c702bb3f249b4daf21077dd11b33b, type: 3}
 --- !u!1 &118398436
 GameObject:
   m_ObjectHideFlags: 0
@@ -646,7 +571,7 @@ Camera:
   m_Depth: -1
   m_CullingMask:
     serializedVersion: 2
-    m_Bits: 4294967295
+    m_Bits: 55
   m_RenderingPath: -1
   m_TargetTexture: {fileID: 0}
   m_TargetDisplay: 0
@@ -975,6 +900,7 @@ GameObject:
   m_Component:
   - component: {fileID: 684586638}
   - component: {fileID: 684586639}
+  - component: {fileID: 684586640}
   m_Layer: 0
   m_Name: DeckManager
   m_TagString: Untagged
@@ -1009,11 +935,35 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 7c48f8e53286f53409465f5c9a18816a, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  cardCameraPrefab: {fileID: 3451324527183647716, guid: 64d7ee80f356a524987b56ff7443996f, type: 3}
   allUnits: []
   cardPrefab: {fileID: 8047631475812358173, guid: 106c702bb3f249b4daf21077dd11b33b, type: 3}
   handParent: {fileID: 1770421128}
   handSize: 5
   poolManager: {fileID: 1878059792}
+--- !u!114 &684586640
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 684586637}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: fae48f98f2af7ba42a63f6a9005656ed, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  playerCamera: {fileID: 377102732}
+  cardCameraPrefab: {fileID: 0}
+  distanceFromCamera: 7
+  verticalOffsetFromCamera: 2.2
+  spacing: 1.68
+  arcRadius: 0.3
+  arcVerticalCurve: 0
+  arcVerticalDrop: 0.5
+  arcTiltDegrees: 3
+  arcTwistDegrees: 13
+  arcRollDegrees: 15
 --- !u!1 &844186155
 GameObject:
   m_ObjectHideFlags: 0
@@ -1931,4 +1881,3 @@ SceneRoots:
   - {fileID: 196379818}
   - {fileID: 1878059793}
   - {fileID: 398274292}
-  - {fileID: 33098114}

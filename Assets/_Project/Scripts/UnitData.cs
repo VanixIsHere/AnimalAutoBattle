@@ -1,5 +1,6 @@
 using System;
 using UnityEngine;
+using AnimalAutoBattle.Units;
 
 [CreateAssetMenu(fileName = "UnitData", menuName = "AnimalAutoBattle/Unit")]
 public class UnitData : ScriptableObject
@@ -20,4 +21,8 @@ public class UnitData : ScriptableObject
     [Header("Class/Role")]
     public UnitRole role; // enum (e.g. Tank, Flanker, Healer)
     public UnitOrigin origin; // enum or country if you want synergy
+
+
+    // 💡 Derived dynamically — do not try to assign during field init!
+    public UnitClass UnitClass => role.GetClass();
 }

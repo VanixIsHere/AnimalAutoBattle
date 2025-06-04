@@ -1,6 +1,6 @@
-using System;
 using TMPro;
 using UnityEngine;
+using UnityEngine.UI;
 
 public class Card3DView : MonoBehaviour
 {
@@ -11,6 +11,11 @@ public class Card3DView : MonoBehaviour
     [Header("Text Elements")]
     [SerializeField] private TextMeshPro nameText;
     [SerializeField] private TextMeshPro specializationText;
+    [SerializeField] private TextMeshPro costText;
+
+    [Header("Class Related")]
+    [SerializeField] private ClassIconLibrary classIconLibrary;
+    [SerializeField] private Image classIconImage;
 
     private UnitData data;
 
@@ -36,6 +41,15 @@ public class Card3DView : MonoBehaviour
         if (specializationText != null)
         {
             specializationText.text = unit.role.ToString();
+        }
+        if (costText != null)
+        {
+            costText.text = unit.cost.ToString();
+        }
+        if (classIconImage != null)
+        {
+            var icon = classIconLibrary.GetIcon(data.UnitClass);
+            classIconImage.sprite = icon;
         }
 
         // BACK ART (optional)
