@@ -880,9 +880,11 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   isDragging: 0
   isHovering: 0
-  baseOrder: 0
+  isLowered: 0
   handAnchorPosition: {x: 0, y: 0, z: 0}
   handAnchorRotation: {x: 0, y: 0, z: 0, w: 1}
+  originalLayer: 0
+  focusedLayerName: CardFocused
 --- !u!114 &6171049313373927209
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -897,15 +899,16 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   hoverLiftDistance: 1.5
   hoverLerpSpeed: 10
-  dragTravelDistance: 3
+  dragForwardTravelDistance: 5
   dragMaxScreenDistance: 200
   dragTiltMaxDegrees: 40
   rotationLerpSpeed: 5
   dragLiftDistance: 0.5
   dragLiftLerpSpeed: 8
+  loweredOffsetDist: 1.4
   wobbleSensitivity: 0.5
-  wobbleDampening: 10
-  wobbleMaxDegrees: 10
+  wobbleDampening: 20
+  wobbleMaxDegrees: 25
 --- !u!1 &8110063457578826790
 GameObject:
   m_ObjectHideFlags: 0

@@ -1,6 +1,7 @@
 using UnityEngine;
 using System.Collections.Generic;
 using UnityEngine.Rendering.Universal;
+using System.Linq;
 
 public class DeckManager : MonoBehaviour
 {
@@ -81,6 +82,23 @@ public class DeckManager : MonoBehaviour
         urpFocusCam.renderType = CameraRenderType.Overlay;
     }
 
+    public bool IsCardBeingDragged(GameObject exceptCard = null)
+    {
+        for (int i = 0; i < currentCardObjects.Count; i++)
+        {
+            if (exceptCard != null && exceptCard == currentCardObjects[i])
+            {
+                continue;
+            }
+            var state = currentCardObjects[i].GetComponent<CardState>();
+            if (state && state.IsDragging)
+            {
+                return true;
+            }
+        }
+        return false;
+    }
+
     public void GenerateHand()
     {
         ClearHand();
@@ -102,6 +120,7 @@ public class DeckManager : MonoBehaviour
         float transformOffset = handSlot * cardSeparationOffset;
         Vector3 spawnPosition = new Vector3(transformOffset, 10f, 0f);
         GameObject card = Instantiate(cardPrefab, spawnPosition, Quaternion.identity);
+        card.GetComponent<CardMotionController>().SetDeckManager(this);
         card.layer = LayerMask.NameToLayer($"Card{handSlot}");
 
         LayerUtils.SetLayerRecursive(card, card.layer);

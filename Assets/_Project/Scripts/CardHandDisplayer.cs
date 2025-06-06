@@ -68,23 +68,21 @@ public class CardHandDisplayer : MonoBehaviour
             Vector3 rightOffset = playerCamera.transform.right * offsetX;
             Vector3 targetPos = centerPoint + rightOffset;
 
-            // Face the camera as before
-            Quaternion lookRotation = Quaternion.LookRotation(-playerCamera.transform.forward, Vector3.up);
-            card.transform.rotation = lookRotation;
-            card.transform.Rotate(90f, 0f, 0f);
-            card.transform.Rotate(0f, 180f, 0f, Space.Self);
+            Quaternion targetRot = Quaternion.LookRotation(-playerCamera.transform.forward, Vector3.up);
+            targetRot *= Quaternion.Euler(90f, 0f, 0f);
+            targetRot *= Quaternion.Euler(0f, 180f, 0f);
 
             // Tilt fan (X rotation)
             float tilt = (1f - Mathf.Abs(normalizedIndex)) * arcTiltDegrees;
-            card.transform.Rotate(tilt, 0f, 0f, Space.Self);
+            targetRot *= Quaternion.Euler(tilt, 0f, 0f);
 
             // Twist fan (Y rotation) - like a steering wheel
             float twist = normalizedIndex * arcTwistDegrees;
-            card.transform.Rotate(0f, twist, 0f, Space.Self);
+            targetRot *= Quaternion.Euler(0f, twist, 0f);
 
             // 🆕 Roll fan (Z rotation) - like spinning the card's face
             float roll = normalizedIndex * arcRollDegrees;
-            card.transform.Rotate(0f, 0f, roll, Space.Self);
+            targetRot *= Quaternion.Euler(0f, 0f, roll);
 
             // Vertical offset
             float verticalArcOffset = (1f - Mathf.Abs(normalizedIndex)) * arcVerticalCurve;
@@ -101,7 +99,7 @@ public class CardHandDisplayer : MonoBehaviour
             if (state != null)
             {
                 state.HandAnchorPosition = targetPos;
-                state.HandAnchorRotation = card.transform.rotation;
+                state.HandAnchorRotation = targetRot;
             }
         }
     }

@@ -955,8 +955,8 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   playerCamera: {fileID: 377102732}
   cardCameraPrefab: {fileID: 0}
-  distanceFromCamera: 7
-  verticalOffsetFromCamera: 2.2
+  distanceFromCamera: 8.5
+  verticalOffsetFromCamera: 2.5
   spacing: 1.68
   arcRadius: 0.3
   arcVerticalCurve: 0

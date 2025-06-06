@@ -2,6 +2,10 @@ using UnityEngine;
 
 public class CardMotionController : MonoBehaviour
 {
+    [Header("Scene Awareness")]
+    [SerializeField, Tooltip("The Deck Manager with knowledge of the hand state.")]
+    private DeckManager deckManager;
+
     [Header("Hover Settings")]
     [SerializeField, Tooltip("Distance the card lifts when hovered.")]
     private float hoverLiftDistance = 1.5f;
@@ -10,7 +14,7 @@ public class CardMotionController : MonoBehaviour
 
     [Header("Drag Settings")]
     [SerializeField, Tooltip("Total forward distance the card travels when dragged upward.")]
-    private float dragTravelDistance = 5.0f;
+    private float dragForwardTravelDistance = 5.0f;
     [SerializeField, Tooltip("Maximum pixel distance for screen-based drag calculation.")]
     private float dragMaxScreenDistance = 200f;
     [SerializeField, Tooltip("Maximum rotation applied when dragged upward.")]
@@ -22,7 +26,7 @@ public class CardMotionController : MonoBehaviour
     [SerializeField, Tooltip("Speed of drag lift lerping.")]
     private float dragLiftLerpSpeed = 8f;
     [SerializeField, Tooltip("Distance the card will lower when another card is being dragged.")]
-    private float loweredOffsetDistance = 1.4f;
+    private float loweredOffsetDist = 1.4f;
 
     [Header("Wobble Settings")]
     [SerializeField, Tooltip("How much mouse movement affects wobble.")]
@@ -30,7 +34,7 @@ public class CardMotionController : MonoBehaviour
     [SerializeField, Tooltip("How quickly wobble slows down.")]
     private float wobbleDampening = 20f;
     [SerializeField, Tooltip("Maximum degrees for wobble.")]
-    private float wobbleMaxDegrees = 23f;
+    private float wobbleMaxDegrees = 25f;
 
     // Runtime state
     private Camera mainCamera;
@@ -73,17 +77,12 @@ public class CardMotionController : MonoBehaviour
         if (state.IsLowered)
         {
             // Card's thin axis (downward from the face)
-            Vector3 loweredOffset = -transform.forward * loweredOffsetDistance;
-            targetPos += loweredOffset * loweredOffsetDistance;
+            Vector3 loweredOffset = -transform.forward * loweredOffsetDist;
+            targetPos += loweredOffset * loweredOffsetDist;
         }
 
         transform.position = Vector3.Lerp(transform.position, targetPos, Time.deltaTime * hoverLerpSpeed); // returnSpeed ~5–10
         transform.rotation = Quaternion.Lerp(transform.rotation, state.HandAnchorRotation, Time.deltaTime * hoverLerpSpeed);
-
-        /*
-            transform.position = Vector3.Lerp(transform.position, state.HandAnchorPosition, Time.deltaTime * hoverLerpSpeed);
-            transform.rotation = Quaternion.Lerp(transform.rotation, state.HandAnchorRotation, Time.deltaTime * hoverLerpSpeed);
-        */
     }
 
     private void UpdateHoverMotion()
@@ -93,6 +92,11 @@ public class CardMotionController : MonoBehaviour
 
         transform.position = Vector3.Lerp(transform.position, liftedPos, Time.deltaTime * hoverLerpSpeed);
         transform.rotation = Quaternion.Lerp(transform.rotation, state.HandAnchorRotation, Time.deltaTime * rotationLerpSpeed);
+    }
+
+    public void SetDeckManager(DeckManager dm)
+    {
+        deckManager = dm;
     }
 
     public void BeginDrag()
@@ -118,7 +122,7 @@ public class CardMotionController : MonoBehaviour
         state.IsDragging = false;
         wobbleVelocity = Vector2.zero;
         wobbleAngle = Vector2.zero;
-        transform.rotation = state.HandAnchorRotation;
+        // transform.rotation = state.HandAnchorRotation;
     }
 
     private void UpdateDragPosition()
@@ -128,7 +132,7 @@ public class CardMotionController : MonoBehaviour
         Vector2 mouseDelta = (Vector2)(currentMousePos - lastMousePos);
         lastMousePos = currentMousePos;
 
-        UpdateWobble(mouseDelta);
+        UpdateWobble(mouseDelta, state.IsDragging);
 
         float verticalProgress = GetVerticalDragProgress(currentMousePos);
         float horizontalProgress = GetHorizontalDragProgress(currentMousePos);
@@ -138,9 +142,12 @@ public class CardMotionController : MonoBehaviour
         // if (percentDragged > 0.8f) ShowPlayPreview();
     }
 
-    private void UpdateWobble(Vector2 mouseDelta)
+    private void UpdateWobble(Vector2 mouseDelta, bool isDragging)
     {
-        wobbleVelocity += new Vector2(mouseDelta.y, -mouseDelta.x) * wobbleSensitivity;
+        if (isDragging)
+        {
+            wobbleVelocity += new Vector2(mouseDelta.y, -mouseDelta.x) * wobbleSensitivity;
+        }
         wobbleVelocity = Vector2.Lerp(wobbleVelocity, Vector2.zero, Time.deltaTime * wobbleDampening);
 
         wobbleAngle = Vector2.Lerp(wobbleAngle, wobbleAngle + wobbleVelocity, Time.deltaTime * 30f);
@@ -164,8 +171,8 @@ public class CardMotionController : MonoBehaviour
         Vector3 forwardDir = mainCamera.transform.forward;
         Vector3 sideDir = mainCamera.transform.right;
 
-        Vector3 forwardOffset = forwardDir * (dragTravelDistance * forwardProgress);
-        Vector3 sideOffset = sideDir * (dragTravelDistance * 0.5f * horizontalProgress);
+        Vector3 forwardOffset = forwardDir * (dragForwardTravelDistance * forwardProgress);
+        Vector3 sideOffset = sideDir * (dragForwardTravelDistance * 0.5f * horizontalProgress);
 
         Vector3 desiredPos = dragStartWorldPos + forwardOffset + sideOffset;
         transform.position = Vector3.Lerp(transform.position, desiredPos, Time.deltaTime * dragLiftLerpSpeed);
@@ -188,7 +195,10 @@ public class CardMotionController : MonoBehaviour
     
     private void OnMouseEnter()
     {
-        state.IsHovering = true;
+        if (deckManager != null ? !deckManager.IsCardBeingDragged(gameObject) : true)
+        {
+            state.IsHovering = true;
+        }
     }
 
     private void OnMouseExit()
