@@ -8,8 +8,10 @@ public class CardHandDisplayer : MonoBehaviour
     [SerializeField] private Camera cardCameraPrefab;
     private List<GameObject> cardsInHand = new();
 
-    [SerializeField] private float distanceFromCamera = 2.5f;
+    [SerializeField] public float distanceFromCamera = 2.5f;
     [SerializeField] private float verticalOffsetFromCamera = -0.5f; // negative = down
+    // public float spawnDistanceFromCamera => spawnDistanceFromCamera;
+    [SerializeField] public float spawnVerticalOffsetFromCamera = 12f;
     [SerializeField] private float spacing = 1.8f; // Space between cards
     [SerializeField] private float arcRadius = 1.5f;           // how curved the hand is (0 = flat line)
     [SerializeField] private float arcVerticalCurve = 0.5f;    // how high the curve lifts outer cards
@@ -17,6 +19,12 @@ public class CardHandDisplayer : MonoBehaviour
     [SerializeField] private float arcTiltDegrees = 15f;       // how much cards tilt forward/back
     [SerializeField] private float arcTwistDegrees = 10f; // how much each card rotates around its thin edge (Z)
     [SerializeField] private float arcRollDegrees = 10f; // How much each card rotates around its front vertical edge (Y)
+    [SerializeField] private int layoutHandSize = 5;
+
+    public void SetLayoutHandSize(int size)
+    {
+        layoutHandSize = Mathf.Max(1, size);
+    }
 
     void Update()
     {
@@ -43,6 +51,14 @@ public class CardHandDisplayer : MonoBehaviour
 
         // Distance outward from camera
         Vector3 centerPoint = rayOrigin + rayDirection * distanceFromCamera + cameraDown * verticalOffsetFromCamera;
+
+        // SizeScale is intended to recalculate hand-based position modifiers based on total hand size and number of remaining cards
+        // In essence, it is for positioning a smaller hand than the max hand size.
+        float sizeScale = 1f;
+        if (layoutHandSize > 1)
+        {
+            sizeScale = (cardsInHand.Count - 1f) / (layoutHandSize - 1f);
+        }
 
         for (int i = 0; i < cardsInHand.Count; i++)
         {
@@ -73,27 +89,27 @@ public class CardHandDisplayer : MonoBehaviour
             targetRot *= Quaternion.Euler(0f, 180f, 0f);
 
             // Tilt fan (X rotation)
-            float tilt = (1f - Mathf.Abs(normalizedIndex)) * arcTiltDegrees;
+            float tilt = (1f - Mathf.Abs(normalizedIndex)) * arcTiltDegrees * sizeScale;
             targetRot *= Quaternion.Euler(tilt, 0f, 0f);
 
             // Twist fan (Y rotation) - like a steering wheel
-            float twist = normalizedIndex * arcTwistDegrees;
+            float twist = normalizedIndex * arcTwistDegrees * sizeScale;
             targetRot *= Quaternion.Euler(0f, twist, 0f);
 
             // 🆕 Roll fan (Z rotation) - like spinning the card's face
-            float roll = normalizedIndex * arcRollDegrees;
+            float roll = normalizedIndex * arcRollDegrees * sizeScale;
             targetRot *= Quaternion.Euler(0f, 0f, roll);
 
             // Vertical offset
-            float verticalArcOffset = (1f - Mathf.Abs(normalizedIndex)) * arcVerticalCurve;
+            float verticalArcOffset = (1f - Mathf.Abs(normalizedIndex)) * arcVerticalCurve * sizeScale;
             targetPos += playerCamera.transform.up * verticalArcOffset;
 
             // Forward arc bow
-            float forwardArcOffset = (1f - Mathf.Abs(normalizedIndex)) * arcRadius;
+            float forwardArcOffset = (1f - Mathf.Abs(normalizedIndex)) * arcRadius * sizeScale;
             targetPos += playerCamera.transform.forward * forwardArcOffset;
 
             // Individual Card Drop
-            float dropOffset = Mathf.Pow(normalizedIndex, 2) * arcVerticalDrop;
+            float dropOffset = Mathf.Pow(normalizedIndex, 2) * arcVerticalDrop * Mathf.Pow(sizeScale, 2);
             targetPos += -playerCamera.transform.up * dropOffset;
 
             if (state != null)

@@ -23,6 +23,10 @@ public class DeckManager : MonoBehaviour
     {
         mainCamera = Camera.main;
         cardHandDisplayer = GetComponent<CardHandDisplayer>();
+        if (cardHandDisplayer != null)
+        {
+            cardHandDisplayer.SetLayoutHandSize(handSize);
+        }
     }
 
     void Start()
@@ -76,7 +80,7 @@ public class DeckManager : MonoBehaviour
         int focusLayer = LayerMask.NameToLayer("CardFocused");
         focusCam.cullingMask = 1 << focusLayer;
         focusCam.depth = mainCamera.depth + handSize + 1 + 100;
-        
+
         urpMain.cameraStack.Add(focusCam);
         UniversalAdditionalCameraData urpFocusCam = focusCam.GetUniversalAdditionalCameraData();
         urpFocusCam.renderType = CameraRenderType.Overlay;
@@ -116,9 +120,11 @@ public class DeckManager : MonoBehaviour
 
     GameObject CreateCard(UnitData unit, int handSlot)
     {
-        float cardSeparationOffset = 1.5f;
-        float transformOffset = handSlot * cardSeparationOffset;
-        Vector3 spawnPosition = new Vector3(transformOffset, 10f, 0f);
+        // Spawn slightly below the camera so cards fold upward nicely
+        Vector3 spawnPosition = mainCamera.transform.position
+                        + mainCamera.transform.forward * cardHandDisplayer.distanceFromCamera
+                        - mainCamera.transform.up * Mathf.Abs(cardHandDisplayer.spawnVerticalOffsetFromCamera);
+
         GameObject card = Instantiate(cardPrefab, spawnPosition, Quaternion.identity);
         card.GetComponent<CardMotionController>().SetDeckManager(this);
         card.layer = LayerMask.NameToLayer($"Card{handSlot}");
@@ -155,5 +161,52 @@ public class DeckManager : MonoBehaviour
             GenerateHand();
             GameManager.Instance.UpdateUI();
         }
+    }
+    
+    public void PlayCard(GameObject card)
+    {
+        int index = currentCardObjects.IndexOf(card);
+        if (index < 0)
+        {
+            return;
+        }
+
+        UnitData data = currentHand[index];
+        BenchManager bench = FindFirstObjectByType<BenchManager>();
+
+        if (bench == null)
+        {
+            Debug.LogError("BenchManager not found");
+        }
+
+        if (!bench.CanAdd(data))
+        {
+            Debug.Log("Cannot play card: Bench is full or merge conditions unmet");
+            return;
+        }
+
+        if (GameManager.Instance.gold < data.cost)
+        {
+            Debug.Log("Not enough gold to play card");
+            return;
+        }
+
+        GameManager.Instance.gold -= data.cost;
+        GameManager.Instance.UpdateUI();
+
+        if (!bench.TryAddToBench(data))
+        {
+            Debug.LogWarning("Failed to add unit to bench despite pre-check");
+            GameManager.Instance.gold += data.cost; // revert
+            GameManager.Instance.UpdateUI();
+            return;
+        }
+
+        currentHand.RemoveAt(index);
+        currentCardObjects.RemoveAt(index);
+
+        Destroy(card);
+
+        cardHandDisplayer.SetCards(currentCardObjects);
     }
 }
