@@ -11,6 +11,7 @@ public class BenchManager : MonoBehaviour
 
     private Transform[] benchSlots;
     private UnitData[] occupiedSlots;
+    private UnitInstance[] occupiedInstances;
 
     public Transform gridCenter;
 
@@ -31,6 +32,7 @@ public class BenchManager : MonoBehaviour
     {
         benchSlots = new Transform[benchSlotCount];
         occupiedSlots = new UnitData[benchSlotCount];
+        occupiedInstances = new UnitInstance[benchSlotCount];
 
         float totalWidth = (benchSlotCount - 1) * slotSpacing;
         float startX = -totalWidth / 2f;
@@ -53,7 +55,7 @@ public class BenchManager : MonoBehaviour
             if (occupiedSlots[i] == null)
             {
                 occupiedSlots[i] = unit;
-                SpawnUnit(unit, benchSlots[i]);
+                occupiedInstances[i] = SpawnUnit(unit, benchSlots[i]);
                 return true;
             }
         }
@@ -62,9 +64,42 @@ public class BenchManager : MonoBehaviour
         return false;
     }
 
-    void SpawnUnit(UnitData unit, Transform slot)
+    public bool CanAdd(UnitData unit)
     {
-        GameObject instance = Instantiate(unit.unitPrefab, slot.position, Quaternion.identity, slot);
-        instance.GetComponent<UnitInstance>()?.Init(unit);
+        // Check for empty slot
+        for (int i = 0; i < occupiedSlots.Length; i++)
+        {
+            if (occupiedSlots[i] == null)
+            {
+                return true;
+            }
+        }
+
+        // Bench full - check for potential merge (two level 1 units of same type)
+        int count = 0;
+        for (int i = 0; i < occupiedSlots.Length; i++)
+        {
+            if (occupiedSlots[i] == unit && occupiedInstances[i] != null && occupiedInstances[i].level == 1)
+            {
+                count++;
+                if (count >= 2)
+                {
+                    return true;
+                }
+            }
+        }
+
+        return false;
+    }
+
+    UnitInstance SpawnUnit(UnitData unit, Transform slot)
+    {
+        GameObject instanceObj = Instantiate(unit.unitPrefab, slot.position, Quaternion.identity, slot);
+        UnitInstance inst = instanceObj.GetComponent<UnitInstance>();
+        if (inst != null)
+        {
+            inst.Init(unit);
+        }
+        return inst;
     }
 }

@@ -28,6 +28,10 @@ public class CardMotionController : MonoBehaviour
     [SerializeField, Tooltip("Distance the card will lower when another card is being dragged.")]
     private float loweredOffsetDist = 1.4f;
 
+    [Header("Playable Zone")]
+    [SerializeField, Tooltip("Forward drag percentage required to play the card.")]
+    private float playableThreshold = 0.9f;
+
     [Header("Wobble Settings")]
     [SerializeField, Tooltip("How much mouse movement affects wobble.")]
     private float wobbleSensitivity = 0.5f;
@@ -44,6 +48,8 @@ public class CardMotionController : MonoBehaviour
     private Vector3 dragStartMousePos;
     private Vector3 dragStartWorldPos;
     private Quaternion dragStartRotation;
+
+    private float lastVerticalProgress = 0f;
 
     private Vector2 wobbleAngle = Vector2.zero;
     private Vector2 wobbleVelocity = Vector2.zero;
@@ -112,6 +118,8 @@ public class CardMotionController : MonoBehaviour
         // Step 2: Add drag lift *on top* of hover
         dragStartWorldPos = hoverPos + liftDir * dragLiftDistance;
 
+        lastVerticalProgress = 0f;
+
         // Reset wobble
         wobbleAngle = Vector2.zero;
         wobbleVelocity = Vector2.zero;
@@ -134,10 +142,11 @@ public class CardMotionController : MonoBehaviour
 
         UpdateWobble(mouseDelta, state.IsDragging);
 
-        float verticalProgress = GetVerticalDragProgress(currentMousePos);
+        // float verticalProgress = GetVerticalDragProgress(currentMousePos);
+        lastVerticalProgress = GetVerticalDragProgress(currentMousePos);
         float horizontalProgress = GetHorizontalDragProgress(currentMousePos);
 
-        ApplyDragTransform(verticalProgress, horizontalProgress);
+        ApplyDragTransform(lastVerticalProgress, horizontalProgress);
         // Optional:
         // if (percentDragged > 0.8f) ShowPlayPreview();
     }
@@ -216,6 +225,10 @@ public class CardMotionController : MonoBehaviour
     {
         EndDrag();
         state.IsDragging = false;
-        // TODO: add drop logic or snap back to arc
+
+        if (lastVerticalProgress >= playableThreshold)
+        {
+            deckManager?.PlayCard(gameObject);
+        }
     }
 }
