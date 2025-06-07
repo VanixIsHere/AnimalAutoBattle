@@ -365,6 +365,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   benchSlotCount: 9
   slotSpacing: 2.1
+  distanceBelowGridInHexes: 2.5
   slotVisualPrefab: {fileID: 4129597731149132338, guid: 4a5945786ac553440a6ffe221f737971, type: 3}
   unitInstancePrefab: {fileID: 0}
   gridCenter: {fileID: 0}
@@ -655,8 +656,12 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   target: {fileID: 0}
-  angle: 45
+  minAngle: 45
+  maxAngle: 48
   padding: 1
+  horizontalCoverage: 0.7
+  topOfGridPercent: 0.05
+  benchBottomPercent: 0.95
 --- !u!1 &398274290
 GameObject:
   m_ObjectHideFlags: 0
@@ -736,8 +741,8 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   hexPrefab: {fileID: 7501520096818386974, guid: b6d7acdaec39c5c4988eb92149d1a87e, type: 3}
-  width: 12
-  height: 5
+  width: 24
+  height: 10
   hexSize: 1
 --- !u!4 &399003377
 Transform:
@@ -957,6 +962,7 @@ MonoBehaviour:
   cardCameraPrefab: {fileID: 0}
   distanceFromCamera: 8.5
   verticalOffsetFromCamera: 2.5
+  spawnVerticalOffsetFromCamera: 12
   spacing: 1.68
   arcRadius: 0.3
   arcVerticalCurve: 0
@@ -964,6 +970,7 @@ MonoBehaviour:
   arcTiltDegrees: 3
   arcTwistDegrees: 13
   arcRollDegrees: 15
+  layoutHandSize: 5
 --- !u!1 &844186155
 GameObject:
   m_ObjectHideFlags: 0

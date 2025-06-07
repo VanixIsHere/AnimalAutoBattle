@@ -5,7 +5,14 @@ public class BenchManager : MonoBehaviour
 {
     public int benchSlotCount = 9;
     public float slotSpacing = 1.5f;
-    float yOffsetFromGrid = -5.5f;
+    // How many hexes below the bottom row the bench should appear
+    public float distanceBelowGridInHexes = 2.5f;
+    float yOffsetFromGrid = -5.5f; // will be recalculated at runtime
+
+    /// <summary>
+    /// Current offset of the bench relative to the grid center in world units.
+    /// </summary>
+    public float CurrentYOffset => yOffsetFromGrid;
     public GameObject slotVisualPrefab;
     public GameObject unitInstancePrefab; // Placeholder prefab for unit
 
@@ -25,6 +32,20 @@ public class BenchManager : MonoBehaviour
         }
 
         gridCenter = centerObj.transform;
+
+        // Adjust bench offset based on current grid dimensions if generator is available
+        HexGridGenerator gridGen = FindFirstObjectByType<HexGridGenerator>();
+        if (gridGen != null)
+        {
+            float halfGridHeight = (gridGen.height - 1) * 1.5f * gridGen.hexSize * 0.5f;
+            float extraOffset = distanceBelowGridInHexes * gridGen.hexSize;
+            yOffsetFromGrid = -(halfGridHeight + extraOffset);
+        }
+        else
+        {
+            Debug.LogWarning("HexGridGenerator not found, using default bench offset");
+        }
+
         GenerateBenchSlots();
     } 
 
