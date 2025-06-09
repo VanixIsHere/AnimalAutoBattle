@@ -3,6 +3,7 @@ using UnityEngine;
 
 public class BenchManager : MonoBehaviour
 {
+    [Header("Bench Layout")]
     public int benchSlotCount = 9;
     public float slotSpacing = 1.5f;
     // How many hexes below the bottom row the bench should appear
@@ -13,6 +14,7 @@ public class BenchManager : MonoBehaviour
     /// Current offset of the bench relative to the grid center in world units.
     /// </summary>
     public float CurrentYOffset => yOffsetFromGrid;
+    [Header("Prefabs")]
     public GameObject slotVisualPrefab;
     public GameObject unitInstancePrefab; // Placeholder prefab for unit
 
@@ -20,6 +22,7 @@ public class BenchManager : MonoBehaviour
     private UnitData[] occupiedSlots;
     private UnitInstance[] occupiedInstances;
 
+    [Header("Runtime")]
     public Transform gridCenter;
 
     void Start()

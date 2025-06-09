@@ -6,16 +6,20 @@ using System.Linq;
 public class DeckManager : MonoBehaviour
 {
     private Camera mainCamera;
+
+    [Header("Prefabs & References")]
     [SerializeField] private Camera cardCameraPrefab;
+    [SerializeField] private GameObject cardPrefab;
+    [SerializeField] private Transform handParent; // 3D empty parent in world space
+    [SerializeField] private UnitPoolManager poolManager;
+
+    [Header("Hand Settings")]
+    [SerializeField] private int handSize = 5;
+
     public List<UnitData> allUnits;
-    public GameObject cardPrefab;
-    public Transform handParent; // 3D empty parent in world space
-    public int handSize = 5;
 
     private List<UnitData> currentHand = new();
     private List<GameObject> currentCardObjects = new();
-
-    public UnitPoolManager poolManager;
 
     private CardHandDisplayer cardHandDisplayer;
 
