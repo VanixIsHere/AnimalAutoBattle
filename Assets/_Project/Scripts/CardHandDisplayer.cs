@@ -1,6 +1,9 @@
 using System.Collections.Generic;
 using System.Linq;
 using UnityEngine;
+#if UNITY_EDITOR
+using UnityEditor;
+#endif
 
 public class CardHandDisplayer : MonoBehaviour
 {
@@ -25,6 +28,22 @@ public class CardHandDisplayer : MonoBehaviour
     [SerializeField] private float arcTwistDegrees = 10f;      // how much each card rotates around its thin edge (Z)
     [SerializeField] private float arcRollDegrees = 10f;       // How much each card rotates around its front vertical edge (Y)
 
+    [Header("Standup/Sitdown")]
+    [System.Serializable]
+    public struct BoundaryPadding
+    {
+        public float top;
+        public float bottom;
+        public float left;
+        public float right;
+    }
+
+    [SerializeField] private BoundaryPadding padding;
+    [SerializeField] private bool showBoundaryGizmo = false;
+
+    private bool handLowered = false;
+    public bool HandIsLowered => handLowered;
+
     public void SetLayoutHandSize(int size)
     {
         layoutHandSize = Mathf.Max(1, size);
@@ -33,6 +52,7 @@ public class CardHandDisplayer : MonoBehaviour
     void Update()
     {
         LayoutCards();
+        UpdateHandLowerState();
         UpdateCardLowering();
     }
 
@@ -129,6 +149,115 @@ public class CardHandDisplayer : MonoBehaviour
         position += -playerCamera.transform.up * dropOffset;
     }
 
+    Rect CalculateHandScreenRect()
+    {
+        if (playerCamera == null || cardsInHand.Count == 0)
+            return new Rect();
+
+        bool first = true;
+        float minX = 0f, minY = 0f, maxX = 0f, maxY = 0f;
+
+        foreach (var card in cardsInHand)
+        {
+            Renderer rend = card.GetComponentInChildren<Renderer>();
+            if (rend == null) continue;
+
+            Bounds b = rend.bounds;
+            Vector3 c = b.center;
+            Vector3 e = b.extents;
+
+            Vector3[] corners = new Vector3[8]
+            {
+                c + new Vector3(-e.x, -e.y, -e.z),
+                c + new Vector3(-e.x, -e.y,  e.z),
+                c + new Vector3(-e.x,  e.y, -e.z),
+                c + new Vector3(-e.x,  e.y,  e.z),
+                c + new Vector3( e.x, -e.y, -e.z),
+                c + new Vector3( e.x, -e.y,  e.z),
+                c + new Vector3( e.x,  e.y, -e.z),
+                c + new Vector3( e.x,  e.y,  e.z)
+            };
+
+            foreach (var corner in corners)
+            {
+                Vector3 sp = playerCamera.WorldToScreenPoint(corner);
+                if (sp.z < 0f) continue;
+                if (first)
+                {
+                    minX = maxX = sp.x;
+                    minY = maxY = sp.y;
+                    first = false;
+                }
+                else
+                {
+                    minX = Mathf.Min(minX, sp.x);
+                    minY = Mathf.Min(minY, sp.y);
+                    maxX = Mathf.Max(maxX, sp.x);
+                    maxY = Mathf.Max(maxY, sp.y);
+                }
+            }
+        }
+
+        if (first)
+            return new Rect();
+
+        return Rect.MinMaxRect(minX, minY, maxX, maxY);
+    }
+
+    void UpdateHandLowerState()
+    {
+        bool isAnyDragging = cardsInHand.Any(c => c.GetComponent<CardState>().IsDragging);
+        bool isAnyHovering = cardsInHand.Any(c => c.GetComponent<CardState>().IsHovering);
+
+        if (isAnyDragging || isAnyHovering)
+        {
+            handLowered = false;
+            return;
+        }
+
+        Rect r = CalculateHandScreenRect();
+        r.xMin -= padding.left;
+        r.xMax += padding.right;
+        r.yMin -= padding.bottom;
+        r.yMax += padding.top;
+
+        Vector2 mouse = Input.mousePosition;
+
+        if (r.width <= 0f || r.height <= 0f)
+            return;
+
+        handLowered = !r.Contains(mouse);
+    }
+
+#if UNITY_EDITOR
+    void OnDrawGizmos()
+    {
+        if (!showBoundaryGizmo || playerCamera == null)
+            return;
+
+        Rect r = CalculateHandScreenRect();
+        r.xMin -= padding.left;
+        r.xMax += padding.right;
+        r.yMin -= padding.bottom;
+        r.yMax += padding.top;
+
+        if (r.width <= 0f || r.height <= 0f)
+            return;
+
+        float z = distanceFromCamera;
+        Vector3 lt = playerCamera.ScreenToWorldPoint(new Vector3(r.xMin, r.yMax, z));
+        Vector3 rt = playerCamera.ScreenToWorldPoint(new Vector3(r.xMax, r.yMax, z));
+        Vector3 lb = playerCamera.ScreenToWorldPoint(new Vector3(r.xMin, r.yMin, z));
+        Vector3 rb = playerCamera.ScreenToWorldPoint(new Vector3(r.xMax, r.yMin, z));
+
+        Handles.color = Color.cyan;
+        Handles.DrawLine(lt, rt);
+        Handles.DrawLine(rt, rb);
+        Handles.DrawLine(rb, lb);
+        Handles.DrawLine(lb, lt);
+    }
+#endif
+
     private void UpdateCardLowering()
     {
         bool isAnyCardDragging = cardsInHand.Any(card => card.GetComponent<CardState>().IsDragging);
@@ -138,7 +267,7 @@ public class CardHandDisplayer : MonoBehaviour
             var state = card.GetComponent<CardState>();
             if (state == null) continue;
 
-            state.IsLowered = isAnyCardDragging && !state.IsDragging;
+            state.IsLowered = (isAnyCardDragging && !state.IsDragging) || handLowered;
         }
     }
 }
