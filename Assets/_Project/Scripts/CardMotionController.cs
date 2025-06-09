@@ -84,7 +84,7 @@ public class CardMotionController : MonoBehaviour
         {
             // Card's thin axis (downward from the face)
             Vector3 loweredOffset = -transform.forward * loweredOffsetDist;
-            targetPos += loweredOffset * loweredOffsetDist;
+            targetPos += loweredOffset;
         }
 
         transform.position = Vector3.Lerp(transform.position, targetPos, Time.deltaTime * hoverLerpSpeed); // returnSpeed ~5–10
@@ -204,7 +204,12 @@ public class CardMotionController : MonoBehaviour
     
     private void OnMouseEnter()
     {
-        if (deckManager != null ? !deckManager.IsCardBeingDragged(gameObject) : true)
+        bool canHover = true;
+        if (deckManager != null)
+        {
+            canHover = !deckManager.IsCardBeingDragged(gameObject) && !deckManager.IsHandLowered();
+        }
+        if (canHover)
         {
             state.IsHovering = true;
         }

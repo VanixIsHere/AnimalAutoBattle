@@ -107,6 +107,11 @@ public class DeckManager : MonoBehaviour
         return false;
     }
 
+    public bool IsHandLowered()
+    {
+        return cardHandDisplayer != null && cardHandDisplayer.HandIsLowered;
+    }
+
     public void GenerateHand()
     {
         ClearHand();
