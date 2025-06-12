@@ -1,0 +1,49 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 7ef50b0346a19564886dca3232cd6e9e, type: 3}
+  m_Name: OriginFlagLibrary
+  m_EditorClassIdentifier: 
+  flagEntries:
+  - origin: 0
+    flagSprite: {fileID: 2800000, guid: 081041a94d0b2094d8a5550bcd7e9447, type: 3}
+  - origin: 1
+    flagSprite: {fileID: 2800000, guid: 65576389ba72b7c4594a874330fdf6dc, type: 3}
+  - origin: 2
+    flagSprite: {fileID: 2800000, guid: a80ba4ebc13ab6644b22f0b264854cf8, type: 3}
+  - origin: 3
+    flagSprite: {fileID: 2800000, guid: b6a3bd7d29ccc93418d06eeb5e7f7314, type: 3}
+  - origin: 4
+    flagSprite: {fileID: 2800000, guid: fe10f2c4205147f4d9c48e9f931fb9da, type: 3}
+  - origin: 5
+    flagSprite: {fileID: 2800000, guid: a2b1a6e68f05e774592290271d7fef23, type: 3}
+  - origin: 6
+    flagSprite: {fileID: 2800000, guid: e8252c323c1530d43b5b6a615cc5aa9b, type: 3}
+  - origin: 7
+    flagSprite: {fileID: 2800000, guid: 080cc1ed7a9554e4fae602c2a9c3b9de, type: 3}
+  - origin: 8
+    flagSprite: {fileID: 2800000, guid: 9aab07ebb66d0714987e8281c50a119a, type: 3}
+  - origin: 9
+    flagSprite: {fileID: 2800000, guid: ee21ffdcc4cc301409e40c7646fb74dc, type: 3}
+  - origin: 10
+    flagSprite: {fileID: 2800000, guid: 0b88697f9028ee84c9089f2c242652ad, type: 3}
+  - origin: 11
+    flagSprite: {fileID: 2800000, guid: cb54dbeb13dfd994cb48d32c0383cb08, type: 3}
+  - origin: 12
+    flagSprite: {fileID: 2800000, guid: 3afed219f7b7a66468093e62e11f97b4, type: 3}
+  - origin: 13
+    flagSprite: {fileID: 2800000, guid: ab507fc3175510246933e816847f63d3, type: 3}
+  - origin: 14
+    flagSprite: {fileID: 2800000, guid: 291e04bdd7c09654a85dd3bf1cc26810, type: 3}
+  - origin: 15
+    flagSprite: {fileID: 2800000, guid: 6f8c6bb0ab80eb24b8de35fdf4553af4, type: 3}
+  - origin: 16
+    flagSprite: {fileID: 2800000, guid: e5ab247ac107a1a4ca131c6397d3b414, type: 3}

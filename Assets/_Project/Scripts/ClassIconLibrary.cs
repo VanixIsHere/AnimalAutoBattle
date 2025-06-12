@@ -4,7 +4,7 @@ using System.Collections.Generic;
 using UnityEngine;
 using AnimalAutoBattle.Units;
 
-[CreateAssetMenu(fileName = "ClassIconLibrary", menuName = "AnimalAutoBattle/Class Icon Library")]
+[CreateAssetMenu(fileName = "ClassIconLibrary", menuName = "Alpha Instinct/Class Icon Library")]
 public class ClassIconLibrary : ScriptableObject
 {
     [Serializable]

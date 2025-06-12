@@ -3,15 +3,26 @@ using UnityEngine;
 
 public class BenchManager : MonoBehaviour
 {
+    [Header("Bench Layout")]
     public int benchSlotCount = 9;
     public float slotSpacing = 1.5f;
-    float yOffsetFromGrid = -5.5f;
+    // How many hexes below the bottom row the bench should appear
+    public float distanceBelowGridInHexes = 2.5f;
+    float yOffsetFromGrid = -5.5f; // will be recalculated at runtime
+
+    /// <summary>
+    /// Current offset of the bench relative to the grid center in world units.
+    /// </summary>
+    public float CurrentYOffset => yOffsetFromGrid;
+    [Header("Prefabs")]
     public GameObject slotVisualPrefab;
     public GameObject unitInstancePrefab; // Placeholder prefab for unit
 
     private Transform[] benchSlots;
     private UnitData[] occupiedSlots;
+    private UnitInstance[] occupiedInstances;
 
+    [Header("Runtime")]
     public Transform gridCenter;
 
     void Start()
@@ -24,6 +35,20 @@ public class BenchManager : MonoBehaviour
         }
 
         gridCenter = centerObj.transform;
+
+        // Adjust bench offset based on current grid dimensions if generator is available
+        HexGridGenerator gridGen = FindFirstObjectByType<HexGridGenerator>();
+        if (gridGen != null)
+        {
+            float halfGridHeight = (gridGen.height - 1) * 1.5f * gridGen.hexSize * 0.5f;
+            float extraOffset = distanceBelowGridInHexes * gridGen.hexSize;
+            yOffsetFromGrid = -(halfGridHeight + extraOffset);
+        }
+        else
+        {
+            Debug.LogWarning("HexGridGenerator not found, using default bench offset");
+        }
+
         GenerateBenchSlots();
     } 
 
@@ -31,6 +56,7 @@ public class BenchManager : MonoBehaviour
     {
         benchSlots = new Transform[benchSlotCount];
         occupiedSlots = new UnitData[benchSlotCount];
+        occupiedInstances = new UnitInstance[benchSlotCount];
 
         float totalWidth = (benchSlotCount - 1) * slotSpacing;
         float startX = -totalWidth / 2f;
@@ -53,7 +79,7 @@ public class BenchManager : MonoBehaviour
             if (occupiedSlots[i] == null)
             {
                 occupiedSlots[i] = unit;
-                SpawnUnit(unit, benchSlots[i]);
+                occupiedInstances[i] = SpawnUnit(unit, benchSlots[i]);
                 return true;
             }
         }
@@ -62,9 +88,42 @@ public class BenchManager : MonoBehaviour
         return false;
     }
 
-    void SpawnUnit(UnitData unit, Transform slot)
+    public bool CanAdd(UnitData unit)
     {
-        GameObject instance = Instantiate(unit.unitPrefab, slot.position, Quaternion.identity, slot);
-        instance.GetComponent<UnitInstance>()?.Init(unit);
+        // Check for empty slot
+        for (int i = 0; i < occupiedSlots.Length; i++)
+        {
+            if (occupiedSlots[i] == null)
+            {
+                return true;
+            }
+        }
+
+        // Bench full - check for potential merge (two level 1 units of same type)
+        int count = 0;
+        for (int i = 0; i < occupiedSlots.Length; i++)
+        {
+            if (occupiedSlots[i] == unit && occupiedInstances[i] != null && occupiedInstances[i].level == 1)
+            {
+                count++;
+                if (count >= 2)
+                {
+                    return true;
+                }
+            }
+        }
+
+        return false;
+    }
+
+    UnitInstance SpawnUnit(UnitData unit, Transform slot)
+    {
+        GameObject instanceObj = Instantiate(unit.unitPrefab, slot.position, Quaternion.identity, slot);
+        UnitInstance inst = instanceObj.GetComponent<UnitInstance>();
+        if (inst != null)
+        {
+            inst.Init(unit);
+        }
+        return inst;
     }
 }

@@ -1,7 +1,7 @@
 using System.Collections.Generic;
 using UnityEngine;
 
-[CreateAssetMenu(fileName = "UnitRegistry", menuName = "AnimalAutoBattle/UnitRegistry")]
+[CreateAssetMenu(fileName = "UnitRegistry", menuName = "Alpha Instinct/UnitRegistry")]
 public class UnitRegistry : ScriptableObject
 {
     public List<UnitData> units;

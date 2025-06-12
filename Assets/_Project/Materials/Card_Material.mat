@@ -54,7 +54,7 @@ Material:
         m_Scale: {x: 1, y: 1}
         m_Offset: {x: 0, y: 0}
     - _CardTextureOverlay:
-        m_Texture: {fileID: 2800000, guid: 5ffa216f4c3534f498dd6d317ba5423c, type: 3}
+        m_Texture: {fileID: 0}
         m_Scale: {x: 1, y: 1}
         m_Offset: {x: 0, y: 0}
     - _DetailAlbedoMap:
@@ -75,6 +75,10 @@ Material:
         m_Offset: {x: 0, y: 0}
     - _EmissionMap:
         m_Texture: {fileID: 0}
+        m_Scale: {x: 1, y: 1}
+        m_Offset: {x: 0, y: 0}
+    - _FlagText:
+        m_Texture: {fileID: 2800000, guid: 6f8c6bb0ab80eb24b8de35fdf4553af4, type: 3}
         m_Scale: {x: 1, y: 1}
         m_Offset: {x: 0, y: 0}
     - _GrainTexture:
@@ -220,6 +224,8 @@ Material:
     - _Color: {r: 1, g: 1, b: 1, a: 1}
     - _EMISSION_COLOR: {r: 0, g: 0, b: 0, a: 0}
     - _EmissionColor: {r: 0, g: 0, b: 0, a: 1}
+    - _FlagAspect: {r: 64, g: 43, b: 0, a: 0}
+    - _FlagUVRect: {r: 0.21, g: 0.18, b: 0.1, a: 0.0671}
     - _REFLECTIONS_COLOR: {r: 1, g: 1, b: 1, a: 1}
     - _SpecColor: {r: 0.19999996, g: 0.19999996, b: 0.19999996, a: 1}
     - _TintColor: {r: 0.8087044, g: 0.8113208, b: 0.5549128, a: 0}

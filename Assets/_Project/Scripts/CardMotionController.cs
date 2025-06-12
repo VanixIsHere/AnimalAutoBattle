@@ -28,6 +28,10 @@ public class CardMotionController : MonoBehaviour
     [SerializeField, Tooltip("Distance the card will lower when another card is being dragged.")]
     private float loweredOffsetDist = 1.4f;
 
+    [Header("Playable Zone")]
+    [SerializeField, Tooltip("Forward drag percentage required to play the card.")]
+    private float playableThreshold = 0.9f;
+
     [Header("Wobble Settings")]
     [SerializeField, Tooltip("How much mouse movement affects wobble.")]
     private float wobbleSensitivity = 0.5f;
@@ -38,6 +42,7 @@ public class CardMotionController : MonoBehaviour
 
     // Runtime state
     private Camera mainCamera;
+    private HandleCursor cursor;
     private CardState state;
 
     private Vector3 lastMousePos;
@@ -45,12 +50,15 @@ public class CardMotionController : MonoBehaviour
     private Vector3 dragStartWorldPos;
     private Quaternion dragStartRotation;
 
+    private float lastVerticalProgress = 0f;
+
     private Vector2 wobbleAngle = Vector2.zero;
     private Vector2 wobbleVelocity = Vector2.zero;
 
     private void Awake()
     {
         mainCamera = Camera.main;
+        cursor = mainCamera.GetComponent<HandleCursor>();
         state = GetComponent<CardState>();
     }
 
@@ -78,7 +86,7 @@ public class CardMotionController : MonoBehaviour
         {
             // Card's thin axis (downward from the face)
             Vector3 loweredOffset = -transform.forward * loweredOffsetDist;
-            targetPos += loweredOffset * loweredOffsetDist;
+            targetPos += loweredOffset;
         }
 
         transform.position = Vector3.Lerp(transform.position, targetPos, Time.deltaTime * hoverLerpSpeed); // returnSpeed ~5–10
@@ -112,6 +120,8 @@ public class CardMotionController : MonoBehaviour
         // Step 2: Add drag lift *on top* of hover
         dragStartWorldPos = hoverPos + liftDir * dragLiftDistance;
 
+        lastVerticalProgress = 0f;
+
         // Reset wobble
         wobbleAngle = Vector2.zero;
         wobbleVelocity = Vector2.zero;
@@ -134,10 +144,11 @@ public class CardMotionController : MonoBehaviour
 
         UpdateWobble(mouseDelta, state.IsDragging);
 
-        float verticalProgress = GetVerticalDragProgress(currentMousePos);
+        // float verticalProgress = GetVerticalDragProgress(currentMousePos);
+        lastVerticalProgress = GetVerticalDragProgress(currentMousePos);
         float horizontalProgress = GetHorizontalDragProgress(currentMousePos);
 
-        ApplyDragTransform(verticalProgress, horizontalProgress);
+        ApplyDragTransform(lastVerticalProgress, horizontalProgress);
         // Optional:
         // if (percentDragged > 0.8f) ShowPlayPreview();
     }
@@ -192,30 +203,66 @@ public class CardMotionController : MonoBehaviour
 
         transform.rotation = targetRot;
     }
-    
+
     private void OnMouseEnter()
     {
-        if (deckManager != null ? !deckManager.IsCardBeingDragged(gameObject) : true)
+        bool canHover = true;
+        if (deckManager != null)
+        {
+            canHover = !deckManager.IsCardBeingDragged(gameObject) && !deckManager.IsHandLowered();
+        }
+        if (canHover)
         {
             state.IsHovering = true;
         }
+        TryUpdateCursor();
     }
 
     private void OnMouseExit()
     {
         state.IsHovering = false;
+        TryUpdateCursor();
     }
 
     void OnMouseDown()
     {
         BeginDrag();
         state.IsDragging = true;
+        TryUpdateCursor();
     }
 
     void OnMouseUp()
     {
         EndDrag();
         state.IsDragging = false;
-        // TODO: add drop logic or snap back to arc
+
+        if (lastVerticalProgress >= playableThreshold)
+        {
+            deckManager?.PlayCard(gameObject);
+        }
+        TryUpdateCursor();
+    }
+
+    void OnMouseOver()
+    {
+        if (cursor.currentState != CursorState.HoverGrab && !deckManager.IsCardBeingDragged(gameObject))
+        {
+            TryUpdateCursor();
+        }
+    }
+    
+    private void TryUpdateCursor()
+    {
+        /*
+            Enforces drag priority between all cards.
+        */
+        if (state.IsDragging)
+            cursor.SetState(CursorState.Grab);
+        else if (state.IsHovering)
+            cursor.SetState(CursorState.HoverGrab);
+        else if (!deckManager.IsCardBeingDragged(gameObject))
+        {
+            cursor.SetState(CursorState.Normal);
+        }
     }
 }
