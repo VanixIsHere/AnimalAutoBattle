@@ -2,7 +2,7 @@ using System;
 using UnityEngine;
 using AnimalAutoBattle.Units;
 
-[CreateAssetMenu(fileName = "UnitData", menuName = "AnimalAutoBattle/Unit")]
+[CreateAssetMenu(fileName = "UnitData", menuName = "Alpha Instinct/Unit")]
 public class UnitData : ScriptableObject
 {
     public string unitName;

@@ -125,6 +125,7 @@ public class DeckManager : MonoBehaviour
         }
 
         cardHandDisplayer.SetCards(currentCardObjects);
+        cardHandDisplayer.HandleRecentGenerationStandup();
     }
 
     GameObject CreateCard(UnitData unit, int handSlot)
@@ -169,6 +170,7 @@ public class DeckManager : MonoBehaviour
             GameManager.Instance.gold -= 2;
             GenerateHand();
             GameManager.Instance.UpdateUI();
+
         }
     }
     

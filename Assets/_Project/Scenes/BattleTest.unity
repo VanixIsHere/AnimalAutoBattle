@@ -518,6 +518,7 @@ GameObject:
   - component: {fileID: 377102731}
   - component: {fileID: 377102734}
   - component: {fileID: 377102735}
+  - component: {fileID: 377102736}
   m_Layer: 0
   m_Name: Main Camera
   m_TagString: MainCamera
@@ -656,12 +657,34 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   target: {fileID: 0}
-  minAngle: 45
-  maxAngle: 48
-  padding: 1
-  horizontalCoverage: 0.7
-  topOfGridPercent: 0.05
-  benchBottomPercent: 0.95
+  minAngle: 52
+  maxAngle: 58
+  padding: 1.8
+  horizontalCoverage: 0.85
+  topOfGridPercent: 0.15
+  benchBottomPercent: 0.75
+--- !u!114 &377102736
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 377102730}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 0c98fab2e82ca924fa8fdc327239de68, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  normal:
+    texture: {fileID: 2800000, guid: 7ca6e30e4553ce04bb11f1aa911f6ba1, type: 3}
+    hotspot: {x: 0, y: 0}
+  hoverGrab:
+    texture: {fileID: 2800000, guid: 490f1fa3da7880b43aec4050996c0848, type: 3}
+    hotspot: {x: 4, y: 4}
+  grab:
+    texture: {fileID: 2800000, guid: 42ba01ec545c009429d3068e583cc696, type: 3}
+    hotspot: {x: 8, y: 8}
+  cursorMode: 0
 --- !u!1 &398274290
 GameObject:
   m_ObjectHideFlags: 0
@@ -741,8 +764,8 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   hexPrefab: {fileID: 7501520096818386974, guid: b6d7acdaec39c5c4988eb92149d1a87e, type: 3}
-  width: 24
-  height: 10
+  width: 12
+  height: 8
   hexSize: 1
 --- !u!4 &399003377
 Transform:
@@ -941,11 +964,11 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   cardCameraPrefab: {fileID: 3451324527183647716, guid: 64d7ee80f356a524987b56ff7443996f, type: 3}
-  allUnits: []
   cardPrefab: {fileID: 8047631475812358173, guid: 106c702bb3f249b4daf21077dd11b33b, type: 3}
-  handParent: {fileID: 1770421128}
-  handSize: 5
+  handParent: {fileID: 0}
   poolManager: {fileID: 1878059792}
+  handSize: 5
+  allUnits: []
 --- !u!114 &684586640
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -961,16 +984,22 @@ MonoBehaviour:
   playerCamera: {fileID: 377102732}
   cardCameraPrefab: {fileID: 0}
   distanceFromCamera: 8.5
-  verticalOffsetFromCamera: 2.5
   spawnVerticalOffsetFromCamera: 12
+  verticalOffsetFromCamera: 2.5
   spacing: 1.68
+  layoutHandSize: 5
   arcRadius: 0.3
   arcVerticalCurve: 0
   arcVerticalDrop: 0.5
   arcTiltDegrees: 3
   arcTwistDegrees: 13
   arcRollDegrees: 15
-  layoutHandSize: 5
+  padding:
+    top: 5
+    bottom: 300
+    left: 0
+    right: 0
+  showBoundaryGizmo: 0
 --- !u!1 &844186155
 GameObject:
   m_ObjectHideFlags: 0
@@ -1700,41 +1729,6 @@ RectTransform:
   m_AnchoredPosition: {x: 0, y: 0}
   m_SizeDelta: {x: 0, y: 0}
   m_Pivot: {x: 0, y: 0}
---- !u!1 &1770421127
-GameObject:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  serializedVersion: 6
-  m_Component:
-  - component: {fileID: 1770421128}
-  m_Layer: 5
-  m_Name: HandPanel
-  m_TagString: Untagged
-  m_Icon: {fileID: 0}
-  m_NavMeshLayer: 0
-  m_StaticEditorFlags: 0
-  m_IsActive: 1
---- !u!224 &1770421128
-RectTransform:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1770421127}
-  m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
-  m_LocalPosition: {x: 0, y: 0, z: 0}
-  m_LocalScale: {x: 0.63158107, y: 0.63158107, z: 0.63158107}
-  m_ConstrainProportionsScale: 0
-  m_Children: []
-  m_Father: {fileID: 0}
-  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
-  m_AnchorMin: {x: 0.5, y: 0}
-  m_AnchorMax: {x: 0.5, y: 0}
-  m_AnchoredPosition: {x: 714.8726, y: 41.667202}
-  m_SizeDelta: {x: 0, y: 400}
-  m_Pivot: {x: 0.5, y: 0.5}
 --- !u!1 &1830040549
 GameObject:
   m_ObjectHideFlags: 0
@@ -1883,7 +1877,6 @@ SceneRoots:
   - {fileID: 399003377}
   - {fileID: 281150281}
   - {fileID: 1725054702}
-  - {fileID: 1770421128}
   - {fileID: 684586638}
   - {fileID: 196379818}
   - {fileID: 1878059793}

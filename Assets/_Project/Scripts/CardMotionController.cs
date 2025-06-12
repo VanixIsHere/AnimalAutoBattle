@@ -42,6 +42,7 @@ public class CardMotionController : MonoBehaviour
 
     // Runtime state
     private Camera mainCamera;
+    private HandleCursor cursor;
     private CardState state;
 
     private Vector3 lastMousePos;
@@ -57,6 +58,7 @@ public class CardMotionController : MonoBehaviour
     private void Awake()
     {
         mainCamera = Camera.main;
+        cursor = mainCamera.GetComponent<HandleCursor>();
         state = GetComponent<CardState>();
     }
 
@@ -201,7 +203,7 @@ public class CardMotionController : MonoBehaviour
 
         transform.rotation = targetRot;
     }
-    
+
     private void OnMouseEnter()
     {
         bool canHover = true;
@@ -213,17 +215,20 @@ public class CardMotionController : MonoBehaviour
         {
             state.IsHovering = true;
         }
+        TryUpdateCursor();
     }
 
     private void OnMouseExit()
     {
         state.IsHovering = false;
+        TryUpdateCursor();
     }
 
     void OnMouseDown()
     {
         BeginDrag();
         state.IsDragging = true;
+        TryUpdateCursor();
     }
 
     void OnMouseUp()
@@ -234,6 +239,30 @@ public class CardMotionController : MonoBehaviour
         if (lastVerticalProgress >= playableThreshold)
         {
             deckManager?.PlayCard(gameObject);
+        }
+        TryUpdateCursor();
+    }
+
+    void OnMouseOver()
+    {
+        if (cursor.currentState != CursorState.HoverGrab && !deckManager.IsCardBeingDragged(gameObject))
+        {
+            TryUpdateCursor();
+        }
+    }
+    
+    private void TryUpdateCursor()
+    {
+        /*
+            Enforces drag priority between all cards.
+        */
+        if (state.IsDragging)
+            cursor.SetState(CursorState.Grab);
+        else if (state.IsHovering)
+            cursor.SetState(CursorState.HoverGrab);
+        else if (!deckManager.IsCardBeingDragged(gameObject))
+        {
+            cursor.SetState(CursorState.Normal);
         }
     }
 }

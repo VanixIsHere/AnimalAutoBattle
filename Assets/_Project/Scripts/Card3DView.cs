@@ -1,3 +1,4 @@
+using System;
 using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
@@ -17,7 +18,29 @@ public class Card3DView : MonoBehaviour
     [SerializeField] private ClassIconLibrary classIconLibrary;
     [SerializeField] private Image classIconImage;
 
+    [Header("Flag Related")]
+    [SerializeField] private OriginFlagLibrary originFlagLibrary;
+
     private UnitData data;
+    private MeshRenderer frontRenderer;
+
+    void Awake()
+    {
+        frontRenderer = topFaceObject.GetComponent<MeshRenderer>();
+    }
+
+    private void applyFlag(Texture2D flagTexture)
+    {
+        Vector4 uvRect = new Vector4(0.21f, 0.18f, 0.08f, 0.05375f);
+
+        var mpb = new MaterialPropertyBlock();
+        frontRenderer.GetPropertyBlock(mpb);
+
+        mpb.SetTexture("_FlagTex", flagTexture);
+        mpb.SetVector("_FlagUVRect", uvRect);
+
+        frontRenderer.SetPropertyBlock(mpb);
+    }
 
     public void Init(UnitData unit)
     {
@@ -26,10 +49,18 @@ public class Card3DView : MonoBehaviour
         // FRONT ART
         if (unit.cardArtwork != null)
         {
-            MeshRenderer frontRenderer = topFaceObject.GetComponent<MeshRenderer>();
             frontRenderer.material.SetTexture("_MainTex", unit.cardArtwork);
             // frontRenderer.material.SetTexture("_NoiseTexture", unit.cardArtwork);
             // frontRenderer.material.SetTexture("_MainTex", unit.cardArtwork);
+            Texture2D flag = originFlagLibrary.GetFlag(unit.origin);
+            if (flag != null)
+            {
+                applyFlag(flag);
+            }
+            else
+            {
+                Debug.LogWarning($"Could not find a country flag for {unit.origin}.");
+            }
             Debug.Log("Shader name: " + frontRenderer.material.shader.name);
         }
 

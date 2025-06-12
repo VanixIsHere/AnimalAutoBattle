@@ -845,6 +845,7 @@ MonoBehaviour:
   costText: {fileID: 7655882570148501567}
   classIconLibrary: {fileID: 11400000, guid: f1d32c3b59e7ca2468ff7f42f988724f, type: 2}
   classIconImage: {fileID: 376194280289064905}
+  originFlagLibrary: {fileID: 11400000, guid: 0ffa98cda134f344685f4ee684a8b5b9, type: 2}
 --- !u!65 &7880292082442988629
 BoxCollider:
   m_ObjectHideFlags: 0
@@ -897,6 +898,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 58e1c7fc5013c8144a0830c5ff937331, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  deckManager: {fileID: 0}
   hoverLiftDistance: 1.5
   hoverLerpSpeed: 10
   dragForwardTravelDistance: 5
@@ -905,7 +907,8 @@ MonoBehaviour:
   rotationLerpSpeed: 5
   dragLiftDistance: 0.5
   dragLiftLerpSpeed: 8
-  loweredOffsetDist: 1.4
+  loweredOffsetDist: 2
+  playableThreshold: 0.8
   wobbleSensitivity: 0.5
   wobbleDampening: 20
   wobbleMaxDegrees: 25

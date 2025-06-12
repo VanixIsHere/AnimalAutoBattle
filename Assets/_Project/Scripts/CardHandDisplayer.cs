@@ -11,12 +11,12 @@ public class CardHandDisplayer : MonoBehaviour
     public Camera playerCamera;
     [SerializeField] private Camera cardCameraPrefab;
 
-    private readonly List<GameObject> cardsInHand = new();
+    private List<GameObject> cardsInHand = new();
 
     [Header("Layout Settings")]
-    [SerializeField] private float distanceFromCamera = 2.5f;
-    [SerializeField] private float verticalOffsetFromCamera = -0.5f; // negative = down
+    [SerializeField] public float distanceFromCamera = 2.5f;
     [SerializeField] public float spawnVerticalOffsetFromCamera = 12f;
+    [SerializeField] private float verticalOffsetFromCamera = -0.5f; // negative = down
     [SerializeField] private float spacing = 1.8f; // Space between cards
     [SerializeField] private int layoutHandSize = 5;
 
@@ -28,7 +28,6 @@ public class CardHandDisplayer : MonoBehaviour
     [SerializeField] private float arcTwistDegrees = 10f;      // how much each card rotates around its thin edge (Z)
     [SerializeField] private float arcRollDegrees = 10f;       // How much each card rotates around its front vertical edge (Y)
 
-    [Header("Standup/Sitdown")]
     [System.Serializable]
     public struct BoundaryPadding
     {
@@ -38,11 +37,15 @@ public class CardHandDisplayer : MonoBehaviour
         public float right;
     }
 
+    [Header("Standup/Sitdown")]
     [SerializeField] private BoundaryPadding padding;
     [SerializeField] private bool showBoundaryGizmo = false;
 
     private bool handLowered = false;
     public bool HandIsLowered => handLowered;
+
+    private Coroutine recentlyGeneratedStandupCoroutine;
+    private bool recentlyGenerated = false;
 
     public void SetLayoutHandSize(int size)
     {
@@ -209,10 +212,9 @@ public class CardHandDisplayer : MonoBehaviour
         bool isAnyDragging = cardsInHand.Any(c => c.GetComponent<CardState>().IsDragging);
         bool isAnyHovering = cardsInHand.Any(c => c.GetComponent<CardState>().IsHovering);
 
-        if (isAnyDragging || isAnyHovering)
+        if (isAnyDragging || isAnyHovering || recentlyGenerated)
         {
             handLowered = false;
-            return;
         }
 
         Rect r = CalculateHandScreenRect();
@@ -226,7 +228,19 @@ public class CardHandDisplayer : MonoBehaviour
         if (r.width <= 0f || r.height <= 0f)
             return;
 
-        handLowered = !r.Contains(mouse);
+        bool mouseInRect = r.Contains(mouse);
+
+        if (recentlyGenerated && mouseInRect && recentlyGeneratedStandupCoroutine != null)
+        {
+            recentlyGenerated = false;
+            StopCoroutine(recentlyGeneratedStandupCoroutine);
+        }
+        else if (recentlyGenerated && !mouseInRect)
+        {
+            return; // Wait until coroutine timer updates 'recentlyGenerated', or the user moves their mouse into the rect
+        }
+
+        handLowered = !mouseInRect;
     }
 
 #if UNITY_EDITOR
@@ -269,5 +283,22 @@ public class CardHandDisplayer : MonoBehaviour
 
             state.IsLowered = (isAnyCardDragging && !state.IsDragging) || handLowered;
         }
+    }
+
+    public void HandleRecentGenerationStandup()
+    {
+        // This function manages the private boolean 'recentlyGenerated', which keeps the hand from sitting down for a few seconds after a new hand is set.
+        recentlyGenerated = true;
+
+        if (recentlyGeneratedStandupCoroutine != null)
+        {
+            // Delete the old running coroutine if a hand is generated before the existing one ends
+            StopCoroutine(recentlyGeneratedStandupCoroutine);
+        }
+
+        recentlyGeneratedStandupCoroutine = StartCoroutine(Utils.Delay(3f, () =>
+        {
+            recentlyGenerated = false;
+        }));
     }
 }
