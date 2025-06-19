@@ -1,3 +1,4 @@
+using System;
 using UnityEngine;
 
 public class CardMotionController : MonoBehaviour
@@ -44,6 +45,7 @@ public class CardMotionController : MonoBehaviour
     private Camera mainCamera;
     private HandleCursor cursor;
     private CardState state;
+    private UIBlockerManager uiBlockerManager;
 
     private Vector3 lastMousePos;
     private Vector3 dragStartMousePos;
@@ -60,6 +62,7 @@ public class CardMotionController : MonoBehaviour
         mainCamera = Camera.main;
         cursor = mainCamera.GetComponent<HandleCursor>();
         state = GetComponent<CardState>();
+        uiBlockerManager = FindFirstObjectByType<UIBlockerManager>();
     }
 
     private void Update()
@@ -137,6 +140,8 @@ public class CardMotionController : MonoBehaviour
 
     private void UpdateDragPosition()
     {
+        if (CheckIfInputIsBlocked())
+            return;
         Vector3 currentMousePos = Input.mousePosition;
 
         Vector2 mouseDelta = (Vector2)(currentMousePos - lastMousePos);
@@ -179,6 +184,8 @@ public class CardMotionController : MonoBehaviour
 
     private void ApplyDragTransform(float forwardProgress, float horizontalProgress)
     {
+        if (CheckIfInputIsBlocked())
+            return;
         Vector3 forwardDir = mainCamera.transform.forward;
         Vector3 sideDir = mainCamera.transform.right;
 
@@ -204,8 +211,21 @@ public class CardMotionController : MonoBehaviour
         transform.rotation = targetRot;
     }
 
+    private bool CheckIfInputIsBlocked()
+    {
+        bool isBlocked = uiBlockerManager.IsBlockingInput;
+        if (isBlocked)
+        {
+            state.IsDragging = false;
+            state.IsHovering = false;
+        }
+        return isBlocked;
+    }
+
     private void OnMouseEnter()
     {
+        if (CheckIfInputIsBlocked())
+            return;
         bool canHover = true;
         if (deckManager != null)
         {
@@ -220,12 +240,16 @@ public class CardMotionController : MonoBehaviour
 
     private void OnMouseExit()
     {
+        if (CheckIfInputIsBlocked())
+            return;
         state.IsHovering = false;
         TryUpdateCursor();
     }
 
     void OnMouseDown()
     {
+        if (CheckIfInputIsBlocked())
+            return;
         BeginDrag();
         state.IsDragging = true;
         TryUpdateCursor();
@@ -233,6 +257,8 @@ public class CardMotionController : MonoBehaviour
 
     void OnMouseUp()
     {
+        if (CheckIfInputIsBlocked())
+            return;
         EndDrag();
         state.IsDragging = false;
 
@@ -245,8 +271,12 @@ public class CardMotionController : MonoBehaviour
 
     void OnMouseOver()
     {
-        if (cursor.currentState != CursorState.HoverGrab && !deckManager.IsCardBeingDragged(gameObject))
+        if (cursor.currentState != CursorState.HoverGrab && !deckManager.IsCardBeingDragged(gameObject) && !CheckIfInputIsBlocked())
         {
+            if (!deckManager.IsCardBeingDragged())
+            {
+                state.IsHovering = true;
+            }
             TryUpdateCursor();
         }
     }
