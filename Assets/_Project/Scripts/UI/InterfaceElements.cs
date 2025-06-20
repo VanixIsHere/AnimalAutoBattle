@@ -344,6 +344,8 @@ public static class UIUtils
         layer.style.justifyContent = Justify.Center;
         parent.Add(layer);
 
+        AdjustColumnFlex(parent);
+
         // Animate after fade-out completes
         int delay = removedCount > 0 ? 300 : 10;
         layer.schedule.Execute(() => {
@@ -352,5 +354,16 @@ public static class UIUtils
         }).ExecuteLater(delay);
 
         return layer;
+    }
+
+    public static void AdjustColumnFlex(VisualElement container)
+    {
+        int count = container.childCount;
+        for (int i = 0; i < count; i++)
+        {
+            var child = container[i];
+            child.style.flexGrow = i == count - 1 ? 1f : 0f;
+            child.style.flexShrink = 0f;
+        }
     }
 }

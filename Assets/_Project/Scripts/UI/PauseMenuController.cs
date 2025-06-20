@@ -44,6 +44,7 @@ public class PauseMenuController : MonoBehaviour
 
         menuRoot = elementContent;
         openLayers.Add(menuRoot);
+        UIUtils.AdjustColumnFlex(menuRoot.parent);
 
         var rootMenu = new List<IMenuItem>
         {
@@ -244,6 +245,7 @@ public class PauseMenuController : MonoBehaviour
 
             openLayers.Add(nextLayer);
             openItemIds.Add(item.Id);
+            UIUtils.AdjustColumnFlex(parent);
         };
 
         if (GroupContainerMenuItem.ActivePageHasPending)
@@ -274,6 +276,8 @@ public class PauseMenuController : MonoBehaviour
                     parentContainer.Remove(layerToRemove);
                 }).ExecuteLater(300);
             }
+
+            UIUtils.AdjustColumnFlex(parentContainer);
 
             for (int i = openLayers.Count - 1; i >= tier - 1; i--)
             {
