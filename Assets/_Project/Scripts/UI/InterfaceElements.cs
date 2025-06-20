@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UIElements;
@@ -14,6 +15,18 @@ public interface ISettingItem
     VisualElement Build();
 }
 
+public interface ISettingsPage
+{
+    bool HasPendingChanges { get; }
+    void Apply();
+    void DiscardChanges();
+    VisualElement Build();
+}
+
+/*
+    The submenu is a unique IMenuItem that renders a submenu of buttons, most commonly a GroupContainerMenuItem.
+    The 'onClick()' function is built in and cannot be specified.
+*/
 public class Submenu : IMenuItem
 {
     public string Label { get; }
@@ -39,8 +52,16 @@ public class Submenu : IMenuItem
         {
             var btn = new Button(() =>
             {
-                var childNext = UIUtils.CreateOrGetLayerColumn(nextLayer, tier + 1);
-                child.OnClick(nextLayer, childNext, tier + 1);
+                void OpenChild()
+                {
+                    var childNext = UIUtils.CreateOrGetLayerColumn(nextLayer, tier + 1);
+                    child.OnClick(nextLayer, childNext, tier + 1);
+                }
+
+                if (GroupContainerMenuItem.ActivePageHasPending)
+                    GroupContainerMenuItem.ShowUnsavedPrompt(OpenChild);
+                else
+                    OpenChild();
             })
             { text = child.Label };
 
@@ -53,6 +74,8 @@ public class Submenu : IMenuItem
             nextLayer.Add(btn);
         }
     }
+
+    // Submenu does not represent a settings page so no Build implementation
 }
 
 public class LeafMenuItem : IMenuItem
@@ -76,31 +99,110 @@ public class LeafMenuItem : IMenuItem
     }
 }
 
-public class GroupContainerMenuItem : IMenuItem
+public class GroupContainerMenuItem : IMenuItem, ISettingsPage
 {
     public string Label { get; }
     public string StyleClass { get; }
 
-    private readonly List<ISettingItem> settings;
+    private readonly List<ISettingItem> _settings;
+    private static ModalManager modal;
+    private static GroupContainerMenuItem activePage;
+    private bool dirty;
+
+    public static GroupContainerMenuItem ActivePage => activePage;
+    public static bool ActivePageHasPending => activePage != null && activePage.dirty;
+
+    public static void ShowUnsavedPrompt(System.Action onContinue)
+    {
+        if (activePage == null || modal == null)
+        {
+            onContinue?.Invoke();
+            return;
+        }
+
+        modal.ShowConfirm(
+            "Apply changes?",
+            "You have unsaved settings.",
+            () => { activePage.Apply(); onContinue?.Invoke(); },
+            () => { activePage.DiscardChanges(); onContinue?.Invoke(); },
+            "Apply",
+            "Discard"
+        );
+    }
+
+    public static void SetModalManager(ModalManager mgr)
+    {
+        modal = mgr;
+    }
+
+    internal static void NotifyChange()
+    {
+        if (activePage != null)
+            activePage.dirty = true;
+    }
 
     public GroupContainerMenuItem(string label, string styleClass = null, params ISettingItem[] settings)
     {
         Label = label;
-        this.settings = new List<ISettingItem>(settings);
+        _settings = new List<ISettingItem>(settings);
         StyleClass = styleClass;
+    }
+
+    public VisualElement Build()
+    {
+        var root = new VisualElement();
+        foreach (var setting in _settings)
+        {
+            root.Add(setting.Build());
+        }
+        var apply = new Button(() => { Apply(); }) { text = "Apply" };
+        apply.AddToClassList("apply-button");
+        root.Add(apply);
+        return root;
     }
 
     public void OnClick(VisualElement parentLayer, VisualElement nextLayer, int tier)
     {
-        nextLayer.Clear();
+        if (activePage == this)
+            return;
 
-        var scroll = new ScrollView();
-        nextLayer.Add(scroll);
-
-        foreach (var setting in settings)
+        void BuildPage()
         {
-            scroll.Add(setting.Build());
+            nextLayer.Clear();
+
+            var scroll = new ScrollView();
+            scroll.AddToClassList("settings-scroll");
+            nextLayer.Add(scroll);
+
+            var content = Build();
+            scroll.Add(content);
+
+            activePage = this;
+            dirty = false;
         }
+
+        if (activePage != null && activePage != this && activePage.HasPendingChanges)
+        {
+            ShowUnsavedPrompt(BuildPage);
+        }
+        else
+        {
+            BuildPage();
+        }
+    }
+
+    public bool HasPendingChanges => dirty;
+
+    public void Apply()
+    {
+        dirty = false;
+        Debug.Log($"Applied settings for {Label}");
+    }
+
+    public void DiscardChanges()
+    {
+        dirty = false;
+        Debug.Log($"Discarded settings for {Label}");
     }
 }
 
@@ -126,7 +228,10 @@ public class ToggleSetting : ISettingItem
         var lbl = new Label(label);
         var toggle = new Toggle { value = initialValue };
 
-        toggle.RegisterValueChangedCallback(evt => onChanged?.Invoke(evt.newValue));
+        toggle.RegisterValueChangedCallback(evt => {
+            onChanged?.Invoke(evt.newValue);
+            GroupContainerMenuItem.NotifyChange();
+        });
 
         container.Add(lbl);
         container.Add(toggle);
@@ -157,7 +262,10 @@ public class DropdownSetting : ISettingItem
 
         var lbl = new Label(label);
         var dropdown = new DropdownField(options, initialValue);
-        dropdown.RegisterValueChangedCallback(evt => onChanged?.Invoke(evt.newValue));
+        dropdown.RegisterValueChangedCallback(evt => {
+            onChanged?.Invoke(evt.newValue);
+            GroupContainerMenuItem.NotifyChange();
+        });
 
         container.Add(lbl);
         container.Add(dropdown);
@@ -190,7 +298,10 @@ public class SliderSetting : ISettingItem
 
         var lbl = new Label(label);
         var slider = new Slider(min, max) { value = initialValue };
-        slider.RegisterValueChangedCallback(evt => onChanged?.Invoke(evt.newValue));
+        slider.RegisterValueChangedCallback(evt => {
+            onChanged?.Invoke(evt.newValue);
+            GroupContainerMenuItem.NotifyChange();
+        });
 
         container.Add(lbl);
         container.Add(slider);
@@ -214,21 +325,31 @@ public static class UIUtils
         }
 
         // Remove layers at or beyond targetIndex
-        while (parent.childCount > targetIndex)
+        int removedCount = parent.childCount - targetIndex;
+        for (int i = parent.childCount - 1; i >= targetIndex; i--)
         {
-            parent.RemoveAt(parent.childCount - 1);
+            var layerToRemove = parent[i];
+            layerToRemove.RemoveFromClassList("active");
+            layerToRemove.schedule.Execute(() =>
+            {
+                parent.Remove(layerToRemove);
+            }).ExecuteLater(300);
         }
 
         // Create new layer
         var layer = new VisualElement();
         layer.AddToClassList("menu-column");
         layer.AddToClassList($"tier{tier}-layer");
+        layer.style.display = DisplayStyle.None;
+        layer.style.justifyContent = Justify.Center;
         parent.Add(layer);
 
-        // Animate
+        // Animate after fade-out completes
+        int delay = removedCount > 0 ? 300 : 10;
         layer.schedule.Execute(() => {
+            layer.style.display = DisplayStyle.Flex;
             layer.AddToClassList("active");
-        }).ExecuteLater(10);
+        }).ExecuteLater(delay);
 
         return layer;
     }

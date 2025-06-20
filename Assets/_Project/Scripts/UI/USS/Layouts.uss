@@ -76,14 +76,22 @@
 /* Settings controls (optional) */
 .setting-control {
     font-size: 12px;
-    padding: 4px;
+    padding: 6px;
+    margin-bottom: 4px;
+    background-color: #333;
+    border-radius: 4px;
 }
 
 /* ScrollView style for group containers */
 .settings-scroll {
     padding: 6px;
-    border-left-width: 1px;
+    border-left-width: 0px;
     border-left-color: #555;
+}
+
+.apply-button {
+    margin-top: 8px;
+    align-self: flex-end;
 }
 
 /* Tier-specific layers */
@@ -92,12 +100,12 @@
 }
 
 .tier2-layer {
-    background-color: #1a1a1a;
+    background-color:rgb(122, 44, 44);
 }
 
 .tier3-layer {
     background-color: #111;
-    border-left-width: 1px;
+    border-left-width: 0px;
     border-left-color: #555;
 }
 
