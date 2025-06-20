@@ -225,7 +225,7 @@ public class PauseMenuController : MonoBehaviour
     {
         VisualElement nextLayer = null;
 
-        if (openItemIds.Count >= tier && openItemIds[tier - 1] == item.Id)
+        if (openItemIds.Count >= tier - 1 && openItemIds[tier - 2] == item.Id)
         {
             CloseTier(tier);
             return null;
@@ -278,6 +278,9 @@ public class PauseMenuController : MonoBehaviour
             for (int i = openLayers.Count - 1; i >= tier - 1; i--)
             {
                 openLayers.RemoveAt(i);
+            }
+            for (int i = openItemIds.Count - 1; i >= tier - 2; i--)
+            {
                 openItemIds.RemoveAt(i);
             }
 
