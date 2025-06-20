@@ -245,7 +245,6 @@ public class PauseMenuController : MonoBehaviour
 
             openLayers.Add(nextLayer);
             openItemIds.Add(item.Id);
-            UIUtils.AdjustColumnFlex(parent);
         };
 
         if (GroupContainerMenuItem.ActivePageHasPending)
