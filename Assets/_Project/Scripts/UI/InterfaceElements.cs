@@ -159,6 +159,9 @@ public class GroupContainerMenuItem : IMenuItem, ISettingsPage
 
     public void OnClick(VisualElement parentLayer, VisualElement nextLayer, int tier)
     {
+        if (activePage == this)
+            return;
+
         void BuildPage()
         {
             nextLayer.Clear();
@@ -318,6 +321,7 @@ public static class UIUtils
         }
 
         // Remove layers at or beyond targetIndex
+        int removedCount = parent.childCount - targetIndex;
         for (int i = parent.childCount - 1; i >= targetIndex; i--)
         {
             var layerToRemove = parent[i];
@@ -332,12 +336,15 @@ public static class UIUtils
         var layer = new VisualElement();
         layer.AddToClassList("menu-column");
         layer.AddToClassList($"tier{tier}-layer");
+        layer.style.display = DisplayStyle.None;
         parent.Add(layer);
 
-        // Animate
+        // Animate after fade-out completes
+        int delay = removedCount > 0 ? 300 : 10;
         layer.schedule.Execute(() => {
+            layer.style.display = DisplayStyle.Flex;
             layer.AddToClassList("active");
-        }).ExecuteLater(10);
+        }).ExecuteLater(delay);
 
         return layer;
     }
