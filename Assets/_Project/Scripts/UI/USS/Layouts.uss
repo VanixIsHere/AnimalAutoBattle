@@ -115,6 +115,8 @@
     transition: opacity 0.3s ease;
     flex-grow: 0;
     flex-shrink: 0;
+    justify-content: center;
+    align-items: flex-start;
 }
 
 .menu-column.active {
