@@ -94,12 +94,12 @@ public class LeafMenuItem : IMenuItem
 
     public void OnClick(VisualElement parentLayer, VisualElement nextLayer, int tier)
     {
-        var layer = PauseMenuController.Instance.TryOpen(this, parentLayer, tier);
-        if (layer == null)
-            return;
+        System.Action run = () => { onClickAction?.Invoke(); };
 
-        layer.Clear();
-        onClickAction?.Invoke();
+        if (GroupContainerMenuItem.ActivePageHasPending)
+            GroupContainerMenuItem.ShowUnsavedPrompt(run);
+        else
+            run();
     }
 }
 
