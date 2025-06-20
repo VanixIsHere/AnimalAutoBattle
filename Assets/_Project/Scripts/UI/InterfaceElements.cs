@@ -100,7 +100,7 @@ public class GroupContainerMenuItem : IMenuItem, ISettingsPage
     public string Label { get; }
     public string StyleClass { get; }
 
-    private readonly List<ISettingItem> settings;
+    private readonly List<ISettingItem> _settings;
     private static ModalManager modal;
     private static GroupContainerMenuItem activePage;
     private bool dirty;
@@ -140,14 +140,14 @@ public class GroupContainerMenuItem : IMenuItem, ISettingsPage
     public GroupContainerMenuItem(string label, string styleClass = null, params ISettingItem[] settings)
     {
         Label = label;
-        this.settings = new List<ISettingItem>(settings);
+        _settings = new List<ISettingItem>(settings);
         StyleClass = styleClass;
     }
 
     public VisualElement Build()
     {
         var root = new VisualElement();
-        foreach (var setting in settings)
+        foreach (var setting in _settings)
         {
             root.Add(setting.Build());
         }
