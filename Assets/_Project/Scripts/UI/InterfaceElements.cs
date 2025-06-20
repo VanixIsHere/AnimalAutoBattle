@@ -5,6 +5,7 @@ using UnityEngine.UIElements;
 
 public interface IMenuItem
 {
+    string Id { get; }
     string Label { get; }
     string StyleClass { get; }
     void OnClick(VisualElement parentLayer, VisualElement nextLayer, int tier);
@@ -29,16 +30,18 @@ public interface ISettingsPage
 */
 public class Submenu : IMenuItem
 {
+    public string Id { get; }
     public string Label { get; }
     public string StyleClass { get; }
 
     public List<IMenuItem> Children { get; }
 
-    public Submenu(string label, params IMenuItem[] children)
-        : this(label, null, children) { }
+    public Submenu(string id, string label, params IMenuItem[] children)
+        : this(id, label, null, children) { }
 
-    public Submenu(string label, string styleClass, params IMenuItem[] children)
+    public Submenu(string id, string label, string styleClass, params IMenuItem[] children)
     {
+        Id = id;
         Label = label;
         StyleClass = styleClass;
         Children = new List<IMenuItem>(children);
@@ -46,22 +49,17 @@ public class Submenu : IMenuItem
 
     public void OnClick(VisualElement parentLayer, VisualElement nextLayer, int tier)
     {
-        nextLayer.Clear();
+        var layer = PauseMenuController.Instance.TryOpen(this, parentLayer, tier);
+        if (layer == null)
+            return;
+
+        layer.Clear();
 
         foreach (var child in Children)
         {
             var btn = new Button(() =>
             {
-                void OpenChild()
-                {
-                    var childNext = UIUtils.CreateOrGetLayerColumn(nextLayer, tier + 1);
-                    child.OnClick(nextLayer, childNext, tier + 1);
-                }
-
-                if (GroupContainerMenuItem.ActivePageHasPending)
-                    GroupContainerMenuItem.ShowUnsavedPrompt(OpenChild);
-                else
-                    OpenChild();
+                child.OnClick(layer, null, tier + 1);
             })
             { text = child.Label };
 
@@ -71,7 +69,7 @@ public class Submenu : IMenuItem
             if (!string.IsNullOrEmpty(child.StyleClass))
                 btn.AddToClassList(child.StyleClass);
 
-            nextLayer.Add(btn);
+            layer.Add(btn);
         }
     }
 
@@ -80,13 +78,15 @@ public class Submenu : IMenuItem
 
 public class LeafMenuItem : IMenuItem
 {
+    public string Id { get; }
     public string Label { get; }
     public string StyleClass { get; }
 
     private readonly System.Action onClickAction;
 
-    public LeafMenuItem(string label, System.Action onClick, string styleClass = null)
+    public LeafMenuItem(string id, string label, System.Action onClick, string styleClass = null)
     {
+        Id = id;
         Label = label;
         onClickAction = onClick;
         StyleClass = styleClass;
@@ -94,13 +94,18 @@ public class LeafMenuItem : IMenuItem
 
     public void OnClick(VisualElement parentLayer, VisualElement nextLayer, int tier)
     {
-        nextLayer.Clear();
-        onClickAction?.Invoke();
+        System.Action run = () => { onClickAction?.Invoke(); };
+
+        if (GroupContainerMenuItem.ActivePageHasPending)
+            GroupContainerMenuItem.ShowUnsavedPrompt(run);
+        else
+            run();
     }
 }
 
 public class GroupContainerMenuItem : IMenuItem, ISettingsPage
 {
+    public string Id { get; }
     public string Label { get; }
     public string StyleClass { get; }
 
@@ -135,14 +140,20 @@ public class GroupContainerMenuItem : IMenuItem, ISettingsPage
         modal = mgr;
     }
 
+    internal static void ClearActivePage()
+    {
+        activePage = null;
+    }
+
     internal static void NotifyChange()
     {
         if (activePage != null)
             activePage.dirty = true;
     }
 
-    public GroupContainerMenuItem(string label, string styleClass = null, params ISettingItem[] settings)
+    public GroupContainerMenuItem(string id, string label, string styleClass = null, params ISettingItem[] settings)
     {
+        Id = id;
         Label = label;
         _settings = new List<ISettingItem>(settings);
         StyleClass = styleClass;
@@ -163,32 +174,21 @@ public class GroupContainerMenuItem : IMenuItem, ISettingsPage
 
     public void OnClick(VisualElement parentLayer, VisualElement nextLayer, int tier)
     {
-        if (activePage == this)
+        var layer = PauseMenuController.Instance.TryOpen(this, parentLayer, tier);
+        if (layer == null)
             return;
 
-        void BuildPage()
-        {
-            nextLayer.Clear();
+        layer.Clear();
 
-            var scroll = new ScrollView();
-            scroll.AddToClassList("settings-scroll");
-            nextLayer.Add(scroll);
+        var scroll = new ScrollView();
+        scroll.AddToClassList("settings-scroll");
+        layer.Add(scroll);
 
-            var content = Build();
-            scroll.Add(content);
+        var content = Build();
+        scroll.Add(content);
 
-            activePage = this;
-            dirty = false;
-        }
-
-        if (activePage != null && activePage != this && activePage.HasPendingChanges)
-        {
-            ShowUnsavedPrompt(BuildPage);
-        }
-        else
-        {
-            BuildPage();
-        }
+        activePage = this;
+        dirty = false;
     }
 
     public bool HasPendingChanges => dirty;
@@ -344,6 +344,8 @@ public static class UIUtils
         layer.style.justifyContent = Justify.Center;
         parent.Add(layer);
 
+        AdjustColumnFlex(parent);
+
         // Animate after fade-out completes
         int delay = removedCount > 0 ? 300 : 10;
         layer.schedule.Execute(() => {
@@ -352,5 +354,16 @@ public static class UIUtils
         }).ExecuteLater(delay);
 
         return layer;
+    }
+
+    public static void AdjustColumnFlex(VisualElement container)
+    {
+        int count = container.childCount;
+        for (int i = 0; i < count; i++)
+        {
+            var child = container[i];
+            child.style.flexGrow = i == count - 1 ? 1f : 0f;
+            child.style.flexShrink = 0f;
+        }
     }
 }

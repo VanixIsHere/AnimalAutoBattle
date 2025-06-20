@@ -5,6 +5,7 @@ using GameSettings;
 
 public class PauseMenuController : MonoBehaviour
 {
+    public static PauseMenuController Instance { get; private set; }
     public GameSettingsManager GameSettingsManager;
     public VisualTreeAsset InGameMenuContainer;
     private bool isPaused = false;
@@ -15,9 +16,13 @@ public class PauseMenuController : MonoBehaviour
     private UIBlockerManager uiBlocker;
     private ModalManager modal;
     private UIDocument rootDoc;
+    private VisualElement menuRoot;
+    private readonly List<string> openItemIds = new List<string>();
+    private readonly List<VisualElement> openLayers = new List<VisualElement>();
 
     void Awake()
     {
+        Instance = this;
         rootDoc = GetComponent<UIDocument>();
         if (rootDoc != null)
             rootDoc.rootVisualElement.style.display = DisplayStyle.None;
@@ -37,11 +42,15 @@ public class PauseMenuController : MonoBehaviour
         var elementContent = menuContainer.Q<VisualElement>("ui-element-content");
         root.Add(menuContainer);
 
+        menuRoot = elementContent;
+        openLayers.Add(menuRoot);
+        UIUtils.AdjustColumnFlex(menuRoot.parent);
+
         var rootMenu = new List<IMenuItem>
         {
-            new LeafMenuItem("Resume", ResumeGame),
-            new Submenu("Settings", "tier1-button",
-                new GroupContainerMenuItem("Audio", "",
+            new LeafMenuItem("resume", "Resume", ResumeGame),
+            new Submenu("settings", "Settings", "tier1-button",
+                new GroupContainerMenuItem("audio", "Audio", "",
                     new SliderSetting("Master Volume", 0f, 100f, GameSettingsManager.MasterVolume*100,
                         v =>
                         {
@@ -67,7 +76,7 @@ public class PauseMenuController : MonoBehaviour
                             GameSettingsManager.SetVoiceVolume(v/100);
                         })
                 ),
-                new GroupContainerMenuItem("Video", "",
+                new GroupContainerMenuItem("video", "Video", "",
                     new DropdownSetting(
                         "Resolution",
                         ResolutionSettingExtensions.GetResolutionList(),
@@ -85,45 +94,44 @@ public class PauseMenuController : MonoBehaviour
                             GameSettingsManager.SetScreenMode(ScreenModeSettingExtensions.ToScreenModeSetting(val));
                         })
                 ),
-                new GroupContainerMenuItem("Gameplay", "",
+                new GroupContainerMenuItem("gameplay", "Gameplay", "",
                     new ToggleSetting("<filler option gameplay>", true, b => Debug.Log("Useless: " + b))
                 ),
-                new GroupContainerMenuItem("Controls", "",
+                new GroupContainerMenuItem("controls", "Controls", "",
                     new ToggleSetting("<filler option controls>", true, b => Debug.Log("Useless: " + b))
                 ),
-                new GroupContainerMenuItem("Misc", "",
+                new GroupContainerMenuItem("misc", "Misc", "",
                     new ToggleSetting("<filler option misc>", true, b => Debug.Log("Useless: " + b))
                 )
             ),
-            new Submenu("Debug",
-                new LeafMenuItem("Enter matchmaking", HandleAttemptMatchmaking)
+            new Submenu("debug", "Debug",
+                new LeafMenuItem("matchmaking", "Enter matchmaking", HandleAttemptMatchmaking)
             ),
-            new Submenu("test1",
-                new Submenu("test2",
-                    new LeafMenuItem("Enter matchmaking", HandleAttemptMatchmaking)
+            new Submenu("test1", "test1",
+                new Submenu("test2", "test2",
+                    new LeafMenuItem("test2-match", "Enter matchmaking", HandleAttemptMatchmaking)
                 ),
-                new Submenu("test3",
-                    new Submenu("test5",
-                        new Submenu("test6",
-                            new Submenu("test7",
-                                new LeafMenuItem("Enter matchmaking", HandleAttemptMatchmaking)
+                new Submenu("test3", "test3",
+                    new Submenu("test5", "test5",
+                        new Submenu("test6", "test6",
+                            new Submenu("test7", "test7",
+                                new LeafMenuItem("test7-match", "Enter matchmaking", HandleAttemptMatchmaking)
                             )
                         )
                     )
                 ),
-                new Submenu("test4",
-                    new LeafMenuItem("Enter matchmaking", HandleAttemptMatchmaking)
+                new Submenu("test4", "test4",
+                    new LeafMenuItem("test4-match", "Enter matchmaking", HandleAttemptMatchmaking)
                 )
             ),
-            new LeafMenuItem("Quit Game", HandleQuit)
+            new LeafMenuItem("quit", "Quit Game", HandleQuit)
         };
 
         foreach (var item in rootMenu)
         {
             var btn = new Button(() =>
             {
-                var nextLayer = UIUtils.CreateOrGetLayerColumn(elementContent, 2);
-                item.OnClick(elementContent, nextLayer, 2);
+                item.OnClick(elementContent, null, 2);
             })
             { text = item.Label };
 
@@ -212,5 +220,79 @@ public class PauseMenuController : MonoBehaviour
             "Yes",
             "No"
         );
+    }
+
+    public VisualElement TryOpen(IMenuItem item, VisualElement parent, int tier)
+    {
+        VisualElement nextLayer = null;
+
+        if (openItemIds.Count >= tier - 1 && openItemIds[tier - 2] == item.Id)
+        {
+            CloseTier(tier);
+            return null;
+        }
+
+        System.Action openAction = () =>
+        {
+            GroupContainerMenuItem.ClearActivePage();
+            nextLayer = UIUtils.CreateOrGetLayerColumn(parent, tier);
+
+            while (openLayers.Count >= tier)
+            {
+                openLayers.RemoveAt(openLayers.Count - 1);
+                openItemIds.RemoveAt(openItemIds.Count - 1);
+            }
+
+            openLayers.Add(nextLayer);
+            openItemIds.Add(item.Id);
+        };
+
+        if (GroupContainerMenuItem.ActivePageHasPending)
+            GroupContainerMenuItem.ShowUnsavedPrompt(openAction);
+        else
+            openAction();
+
+        return nextLayer;
+    }
+
+    public void CloseTier(int tier)
+    {
+        if (tier <= 1 || openLayers.Count < tier)
+            return;
+
+        System.Action closeAction = () =>
+        {
+            var parent = openLayers[tier - 2];
+            var parentContainer = parent.parent;
+            int currentIndex = parentContainer.IndexOf(parent);
+            int targetIndex = currentIndex + 1;
+            for (int i = parentContainer.childCount - 1; i >= targetIndex; i--)
+            {
+                var layerToRemove = parentContainer[i];
+                layerToRemove.RemoveFromClassList("active");
+                layerToRemove.schedule.Execute(() =>
+                {
+                    parentContainer.Remove(layerToRemove);
+                }).ExecuteLater(300);
+            }
+
+            UIUtils.AdjustColumnFlex(parentContainer);
+
+            for (int i = openLayers.Count - 1; i >= tier - 1; i--)
+            {
+                openLayers.RemoveAt(i);
+            }
+            for (int i = openItemIds.Count - 1; i >= tier - 2; i--)
+            {
+                openItemIds.RemoveAt(i);
+            }
+
+            GroupContainerMenuItem.ClearActivePage();
+        };
+
+        if (GroupContainerMenuItem.ActivePageHasPending)
+            GroupContainerMenuItem.ShowUnsavedPrompt(closeAction);
+        else
+            closeAction();
     }
 }
