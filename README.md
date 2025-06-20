@@ -26,6 +26,12 @@
 
 This game is currently in active development. Art, networking, and balance are in progress. Feedback and playtesting will guide ongoing iteration.
 
+### UI Setup
+
+The pause menu relies on `ModalManager` and `GroupContainerMenuItem` for settings pages.
+Attach a `ModalManager` component to the same GameObject as `PauseMenuController`.
+When navigating away from a settings page that has unsaved changes, a confirmation dialog will appear allowing you to apply or discard the modifications.
+
 ---
 
 *For concept art, development logs, and updates, stay tuned to future dev posts or repositories linked here.*

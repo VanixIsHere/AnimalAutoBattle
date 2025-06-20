@@ -27,6 +27,7 @@ public class PauseMenuController : MonoBehaviour
         cursor = mainCamera.GetComponent<HandleCursor>();
         uiBlocker = GetComponent<UIBlockerManager>();
         modal = GetComponent<ModalManager>();
+        GroupContainerMenuItem.SetModalManager(modal);
 
         var menuContainer = InGameMenuContainer.CloneTree();
         var root = rootDoc.rootVisualElement.Q<VisualElement>("ROOT");
