@@ -85,9 +85,8 @@
 /* ScrollView style for group containers */
 .settings-scroll {
     padding: 6px;
-    border-left-width: 1px;
+    border-left-width: 0px;
     border-left-color: #555;
-    row-gap: 4px;
 }
 
 .apply-button {
@@ -101,12 +100,12 @@
 }
 
 .tier2-layer {
-    background-color: #1a1a1a;
+    background-color:rgb(122, 44, 44);
 }
 
 .tier3-layer {
     background-color: #111;
-    border-left-width: 1px;
+    border-left-width: 0px;
     border-left-color: #555;
 }
 

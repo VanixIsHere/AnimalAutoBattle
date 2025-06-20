@@ -1,9 +1,11 @@
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UIElements;
+using GameSettings;
 
 public class PauseMenuController : MonoBehaviour
 {
+    public GameSettingsManager GameSettingsManager;
     public VisualTreeAsset InGameMenuContainer;
     private bool isPaused = false;
 
@@ -32,8 +34,7 @@ public class PauseMenuController : MonoBehaviour
         var menuContainer = InGameMenuContainer.CloneTree();
         var root = rootDoc.rootVisualElement.Q<VisualElement>("ROOT");
 
-        var nextLayer = menuContainer.Q<VisualElement>("nextLayer");
-        var primaryLayer = menuContainer.Q<VisualElement>("primary-layer");
+        var elementContent = menuContainer.Q<VisualElement>("ui-element-content");
         root.Add(menuContainer);
 
         var rootMenu = new List<IMenuItem>
@@ -41,12 +42,48 @@ public class PauseMenuController : MonoBehaviour
             new LeafMenuItem("Resume", ResumeGame),
             new Submenu("Settings", "tier1-button",
                 new GroupContainerMenuItem("Audio", "",
-                    new SliderSetting("Master Volume", 0f, 100f, 50f, v => Debug.Log("Master Volume: " + v)),
-                    new SliderSetting("Music Volume", 0f, 100f, 70f, v => Debug.Log("Music Volume: " + v))
+                    new SliderSetting("Master Volume", 0f, 100f, GameSettingsManager.MasterVolume*100,
+                        v =>
+                        {
+                            Debug.Log("Master Volume: " + v + " " + v/100);
+                            GameSettingsManager.SetMasterVolume(v/100);
+                        }),
+                    new SliderSetting("Music Volume", 0f, 100f, GameSettingsManager.MusicVolume*100,
+                        v =>
+                        {
+                            Debug.Log("Music Volume: " + v + " " + v/100);
+                            GameSettingsManager.SetMusicVolume(v/100);
+                        }),
+                    new SliderSetting("SFX Volume", 0f, 100f, GameSettingsManager.SFXVolume*100,
+                        v =>
+                        {
+                            Debug.Log("SFX Volume: " + v + " " + v/100);
+                            GameSettingsManager.SetSFXVolume(v/100);
+                        }),
+                    new SliderSetting("Voice Volume", 0f, 100f, GameSettingsManager.VoiceVolume*100,
+                        v =>
+                        {
+                            Debug.Log("Voice Volume: " + v + " " + v/100);
+                            GameSettingsManager.SetVoiceVolume(v/100);
+                        })
                 ),
                 new GroupContainerMenuItem("Video", "",
-                    new DropdownSetting("Resolution", new List<string> { "1920x1080", "1280x720" }, "1920x1080", val => Debug.Log("Res: " + val)),
-                    new ToggleSetting("Fullscreen", true, b => Debug.Log("Fullscreen: " + b))
+                    new DropdownSetting(
+                        "Resolution",
+                        ResolutionSettingExtensions.GetResolutionList(),
+                        ResolutionSettingExtensions.ToResolutionString(GameSettingsManager.ScreenResolution),
+                        val => {
+                            Debug.Log("ScreenResolution: " + val);
+                            GameSettingsManager.SetScreenResolution(ResolutionSettingExtensions.ToResolutionSetting(val));
+                        }),
+                    new DropdownSetting(
+                        "Screen Mode",
+                        ScreenModeSettingExtensions.GetScreenModeList(),
+                        ScreenModeSettingExtensions.ToScreenModeString(GameSettingsManager.ScreenMode),
+                        val => {
+                            Debug.Log("ScreenMode: " + val);
+                            GameSettingsManager.SetScreenMode(ScreenModeSettingExtensions.ToScreenModeSetting(val));
+                        })
                 ),
                 new GroupContainerMenuItem("Gameplay", "",
                     new ToggleSetting("<filler option gameplay>", true, b => Debug.Log("Useless: " + b))
@@ -61,6 +98,23 @@ public class PauseMenuController : MonoBehaviour
             new Submenu("Debug",
                 new LeafMenuItem("Enter matchmaking", HandleAttemptMatchmaking)
             ),
+            new Submenu("test1",
+                new Submenu("test2",
+                    new LeafMenuItem("Enter matchmaking", HandleAttemptMatchmaking)
+                ),
+                new Submenu("test3",
+                    new Submenu("test5",
+                        new Submenu("test6",
+                            new Submenu("test7",
+                                new LeafMenuItem("Enter matchmaking", HandleAttemptMatchmaking)
+                            )
+                        )
+                    )
+                ),
+                new Submenu("test4",
+                    new LeafMenuItem("Enter matchmaking", HandleAttemptMatchmaking)
+                )
+            ),
             new LeafMenuItem("Quit Game", HandleQuit)
         };
 
@@ -68,8 +122,8 @@ public class PauseMenuController : MonoBehaviour
         {
             var btn = new Button(() =>
             {
-                var nextLayer = UIUtils.CreateOrGetLayerColumn(primaryLayer, 2);
-                item.OnClick(primaryLayer, nextLayer, 2);
+                var nextLayer = UIUtils.CreateOrGetLayerColumn(elementContent, 2);
+                item.OnClick(elementContent, nextLayer, 2);
             })
             { text = item.Label };
 
@@ -79,7 +133,7 @@ public class PauseMenuController : MonoBehaviour
             if (!string.IsNullOrEmpty(item.StyleClass))
                 btn.AddToClassList(item.StyleClass);
 
-            primaryLayer.Add(btn);
+            elementContent.Add(btn);
         }
     }
 

@@ -23,6 +23,10 @@ public interface ISettingsPage
     VisualElement Build();
 }
 
+/*
+    The submenu is a unique IMenuItem that renders a submenu of buttons, most commonly a GroupContainerMenuItem.
+    The 'onClick()' function is built in and cannot be specified.
+*/
 public class Submenu : IMenuItem
 {
     public string Label { get; }
@@ -337,6 +341,7 @@ public static class UIUtils
         layer.AddToClassList("menu-column");
         layer.AddToClassList($"tier{tier}-layer");
         layer.style.display = DisplayStyle.None;
+        layer.style.justifyContent = Justify.Center;
         parent.Add(layer);
 
         // Animate after fade-out completes
