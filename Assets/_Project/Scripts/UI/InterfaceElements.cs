@@ -71,18 +71,7 @@ public class Submenu : IMenuItem
         }
     }
 
-    public VisualElement Build()
-    {
-        var root = new VisualElement();
-        foreach (var setting in settings)
-        {
-            root.Add(setting.Build());
-        }
-        var apply = new Button(() => { Apply(); }) { text = "Apply" };
-        apply.AddToClassList("apply-button");
-        root.Add(apply);
-        return root;
-    }
+    // Submenu does not represent a settings page so no Build implementation
 }
 
 public class LeafMenuItem : IMenuItem
@@ -153,6 +142,19 @@ public class GroupContainerMenuItem : IMenuItem, ISettingsPage
         Label = label;
         this.settings = new List<ISettingItem>(settings);
         StyleClass = styleClass;
+    }
+
+    public VisualElement Build()
+    {
+        var root = new VisualElement();
+        foreach (var setting in settings)
+        {
+            root.Add(setting.Build());
+        }
+        var apply = new Button(() => { Apply(); }) { text = "Apply" };
+        apply.AddToClassList("apply-button");
+        root.Add(apply);
+        return root;
     }
 
     public void OnClick(VisualElement parentLayer, VisualElement nextLayer, int tier)
