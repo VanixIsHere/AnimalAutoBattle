@@ -318,9 +318,9 @@ public static class UIUtils
         }
 
         // Remove layers at or beyond targetIndex
-        while (parent.childCount > targetIndex)
+        for (int i = parent.childCount - 1; i >= targetIndex; i--)
         {
-            var layerToRemove = parent[parent.childCount - 1];
+            var layerToRemove = parent[i];
             layerToRemove.RemoveFromClassList("active");
             layerToRemove.schedule.Execute(() =>
             {
